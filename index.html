@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UX Salary Tool Nederland</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:system-ui,-apple-system,sans-serif;background:#f3f4f6;min-height:100vh;padding:32px 24px;}
+.wrap{background:#fff;border-radius:20px;padding:36px;max-width:1100px;margin:0 auto;}
+input[type=text],input[type=number],select{font-size:13px;padding:8px 11px;border-radius:8px;border:1.5px solid #d1d5db;background:#fff;color:#111827;width:100%;font-family:inherit;outline:none;}
+.toolbar{display:flex;gap:8px;align-items:center;margin-bottom:24px;flex-wrap:wrap;}
+.toolbar input{max-width:220px;}
+.count-label{margin-left:auto;font-size:11px;color:#9ca3af;}
+.fs{margin-bottom:16px;}
+.fsl{font-size:10px;color:#9ca3af;text-transform:uppercase;letter-spacing:.08em;margin-bottom:9px;display:block;font-weight:600;}
+.btn-group{display:flex;gap:6px;flex-wrap:wrap;}
+.add-form{background:#f3f4f6;border-radius:12px;padding:20px;margin-bottom:24px;}
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;}
+.fl{font-size:11px;color:#6b7280;margin-bottom:5px;display:block;font-weight:500;}
+.form-actions{display:flex;gap:8px;}
+.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px;}
+.stat-card{background:#f3f4f6;border-radius:12px;padding:16px 18px;}
+.stat-label{font-size:10px;color:#9ca3af;margin:0 0 5px;text-transform:uppercase;letter-spacing:.07em;font-weight:600;}
+.stat-value{font-size:22px;font-weight:700;color:#111827;margin:0;letter-spacing:-.02em;}
+.stat-sub{font-size:11px;color:#9ca3af;margin:4px 0 0;line-height:1.4;}
+.stat-card.hl{background:#111827;}
+.stat-card.hl .stat-label{color:rgba(255,255,255,.45);}
+.stat-card.hl .stat-value{color:#fff;font-size:18px;}
+.stat-card.hl .stat-sub{color:rgba(255,255,255,.35);}
+.range-box{background:#f3f4f6;border-radius:12px;padding:18px 20px;margin-bottom:20px;}
+.legend{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:12px;font-size:11px;color:#9ca3af;}
+.legend-item{display:flex;align-items:center;gap:5px;}
+.col-header{display:grid;grid-template-columns:160px 72px 130px 130px 1fr 128px 24px;gap:8px;font-size:10px;color:#9ca3af;text-transform:uppercase;letter-spacing:.07em;font-weight:600;padding:0 6px 10px;border-bottom:1px solid #e5e7eb;margin-bottom:2px;}
+.job-row{display:grid;grid-template-columns:160px 72px 130px 130px 1fr 128px 24px;align-items:center;gap:8px;padding:9px 6px;border-radius:10px;}
+.job-row:hover{background:#f9fafb;}
+.job-name{color:#111827;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px;font-weight:500;}
+.chip-lvl,.chip-role,.chip-cat{font-size:11px;padding:4px 0;border-radius:20px;font-weight:500;border:1px solid;display:block;text-align:center;width:100%;}
+.bar-cell{position:relative;height:22px;background:#e5e7eb;border-radius:6px;overflow:visible;}
+.bar-fill{position:absolute;top:0;height:100%;border-radius:6px;background:linear-gradient(90deg,#93c5fd,#2563eb);width:0%;transition:width .65s cubic-bezier(.22,1,.36,1);}
+.bar-marker{position:absolute;top:-4px;bottom:-4px;width:2.5px;border-radius:2px;}
+.val-cell{text-align:right;font-size:12px;color:#6b7280;white-space:nowrap;}
+.empty{text-align:center;padding:48px;color:#d1d5db;font-size:14px;}
+.divider{border:none;border-top:1px solid #e5e7eb;margin:32px 0;}
+.explain-title{font-size:10px;color:#9ca3af;text-transform:uppercase;letter-spacing:.08em;margin-bottom:14px;font-weight:600;}
+.ex-card{border:1.5px solid #e5e7eb;border-radius:10px;margin-bottom:8px;overflow:hidden;}
+.ex-hdr{display:flex;align-items:center;justify-content:space-between;padding:13px 16px;cursor:pointer;background:#fff;}
+.ex-hdr:hover{background:#f9fafb;}
+.ex-title{display:flex;align-items:center;gap:9px;font-size:13px;font-weight:500;color:#111827;}
+.edot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+.echev{font-size:10px;color:#d1d5db;transition:transform .2s;}
+.echev.open{transform:rotate(180deg);}
+.ex-body{display:none;padding:0 16px 16px;background:#fafafa;border-top:1.5px solid #e5e7eb;}
+.ex-body.open{display:block;}
+.edesc{font-size:13px;color:#6b7280;line-height:1.7;margin-top:12px;}
+.eformula{background:#fff;border:1.5px solid #e5e7eb;border-radius:8px;padding:11px 14px;margin:10px 0;font-size:12px;color:#374151;font-family:ui-monospace,monospace;line-height:1.7;}
+.eformula .cm{color:#d1d5db;}
+.source-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:8px;}
+.source-card{border-radius:12px;padding:18px 20px;text-decoration:none;display:block;transition:transform .15s,box-shadow .15s;}
+.source-card:hover{transform:translateY(-2px);box-shadow:0 4px 16px rgba(0,0,0,0.1);}
+.source-card-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;opacity:.7;}
+.source-card-title{font-size:15px;font-weight:700;margin-bottom:6px;line-height:1.3;}
+.source-card-desc{font-size:12px;line-height:1.5;opacity:.75;margin-bottom:14px;}
+.source-card-link{font-size:11px;font-weight:600;display:flex;align-items:center;gap:4px;}
+.toast-wrap{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(80px);background:#111827;color:#fff;padding:10px 20px;border-radius:10px;font-size:13px;opacity:0;transition:all .2s;z-index:999;pointer-events:none;}
+.toast-wrap.show{transform:translateX(-50%) translateY(0);opacity:1;}
+</style>
+</head>
+<body>
+<div class="toast-wrap" id="toast"></div>
+<div class="wrap">
+
+<div style="display:flex;align-items:center;gap:6px;margin-bottom:20px;font-size:12px;color:#9ca3af;">
+  <svg width="13" height="13" viewBox="0 0 16 16" fill="none" style="flex-shrink:0;"><circle cx="8" cy="8" r="7" stroke="#9ca3af" stroke-width="1.5"/><path d="M8 7v5M8 5v.5" stroke="#9ca3af" stroke-width="1.5" stroke-linecap="round"/></svg>
+  Gebaseerd op 172 vacatures van
+  <a href="https://uxwork.nl/en/" target="_blank" style="color:#2563eb;text-decoration:none;font-weight:500;">uxwork.nl</a>
+  — Een vacaturesite voor UX &amp; product design functies
+</div>
+
+<div class="toolbar">
+  <input type="text" id="search" placeholder="Zoek op bedrijfsnaam..." oninput="render()">
+  <button style="padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;border-radius:8px;border:2px solid #111827;background:#111827;color:#fff;white-space:nowrap;" onmouseover="this.style.opacity='.8'" onmouseout="this.style.opacity='1'" onclick="toggleForm()">+ Vacature toevoegen</button>
+  <button style="padding:8px 16px;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;border-radius:8px;border:2px solid #9ca3af;background:#e5e7eb;color:#111827;white-space:nowrap;" onmouseover="this.style.background='#d1d5db'" onmouseout="this.style.background='#e5e7eb'" onclick="resetFilters()">Reset filters</button>
+  <span class="count-label" id="countLabel"></span>
+</div>
+
+<div id="addForm" style="display:none;">
+  <div class="add-form">
+    <div class="fg">
+      <div><label class="fl">Bedrijfsnaam</label><input type="text" id="f-name" placeholder="bijv. Coolblue"></div>
+      <div><label class="fl">Niveau</label><select id="f-level"><option value="junior">Junior</option><option value="medior" selected>Medior</option><option value="senior">Senior</option><option value="lead">Lead</option><option value="head">Head</option></select></div>
+      <div><label class="fl">Min. salaris (€/mnd)</label><input type="number" id="f-min" placeholder="3500"></div>
+      <div><label class="fl">Max. salaris (€/mnd)</label><input type="number" id="f-max" placeholder="5000"></div>
+      <div><label class="fl">Sector</label><select id="f-cat"><option value="agency">Digital agency</option><option value="saas">SaaS &amp; Product</option><option value="corporate">Corporate</option><option value="nuts">Nuts &amp; Energie</option><option value="gov">Overheid</option><option value="hightech">High-end / Tech</option><option value="other">Overige</option></select></div>
+      <div><label class="fl">Roltype</label><select id="f-role"><option value="uxui">UX/UI Design</option><option value="product">Product Design</option><option value="ux">UX Design</option><option value="ui">UI Design</option><option value="researcher">UX Research</option><option value="service">Service Design</option><option value="other">Overig</option></select></div>
+    </div>
+    <div class="form-actions">
+      <button style="flex:1;padding:9px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;border-radius:8px;border:2px solid #111827;background:#111827;color:#fff;" onclick="addEntry()">Toevoegen</button>
+      <button style="padding:9px 16px;font-size:13px;cursor:pointer;font-family:inherit;border-radius:8px;border:2px solid #9ca3af;background:#e5e7eb;color:#111827;" onclick="toggleForm()">Annuleren</button>
+    </div>
+  </div>
+</div>
+
+<div class="fs"><span class="fsl">Niveau</span><div class="btn-group" id="level-btns"></div></div>
+<div class="fs"><span class="fsl">Roltype</span><div class="btn-group" id="role-btns"></div></div>
+<div class="fs" style="margin-bottom:28px;"><span class="fsl">Sector</span><div class="btn-group" id="cat-btns"></div></div>
+
+<div class="stats-grid" id="stats"></div>
+<div class="range-box" id="avgRangeBar"></div>
+
+<div class="legend">
+  <div class="legend-item"><span style="width:20px;height:10px;border-radius:3px;background:linear-gradient(90deg,#93c5fd,#2563eb);display:inline-block;"></span>Salarisrange</div>
+  <div class="legend-item"><span style="width:2.5px;height:12px;background:#ef4444;display:inline-block;border-radius:1px;"></span>Mediaan</div>
+  <div class="legend-item"><span style="width:2.5px;height:12px;background:#f59e0b;display:inline-block;border-radius:1px;"></span>Gem. midden</div>
+  <div class="legend-item"><span style="width:14px;height:8px;background:rgba(245,158,11,0.15);display:inline-block;border-radius:3px;border:1.5px dashed rgba(245,158,11,0.5);"></span>Gem. range</div>
+</div>
+
+<div class="col-header">
+  <span>Bedrijf</span><span>Niveau</span><span>Rol</span><span>Sector</span><span>Range</span><span style="text-align:right;">Min – Max</span><span></span>
+</div>
+<div id="jobList"></div>
+
+<hr class="divider">
+<div class="explain-title">Hoe worden de cijfers berekend?</div>
+<div class="ex-card"><div class="ex-hdr" onclick="toggleEx(this)"><div class="ex-title"><span class="edot" style="background:#f59e0b;"></span>Gemiddeld middensalaris</div><span class="echev">▼</span></div><div class="ex-body"><p class="edesc">Van elke vacature berekenen we het midden tussen min en max. Daarna nemen we het gemiddelde van al die middenwaarden.</p><div class="eformula">middensalaris = (min + max) / 2<br><span class="cm">bijv. €4.000 – €6.000 → midden = €5.000</span><br><br>gemiddelde = som van alle middens / aantal</div></div></div>
+<div class="ex-card"><div class="ex-hdr" onclick="toggleEx(this)"><div class="ex-title"><span class="edot" style="background:#ef4444;"></span>Mediaan</div><span class="echev">▼</span></div><div class="ex-body"><p class="edesc">Het middelste getal als alle middenwaarden gesorteerd zijn. Helft zit eronder, helft erboven. Robuuster dan het gemiddelde en het eerlijkste referentiepunt voor onderhandelingen.</p><div class="eformula">sorteer: [3.200, 3.800, <strong>4.500</strong>, 5.100, 7.000]<br><span class="cm">→ mediaan = €4.500</span></div></div></div>
+<div class="ex-card"><div class="ex-hdr" onclick="toggleEx(this)"><div class="ex-title"><span class="edot" style="background:#8b5cf6;"></span>Modaal</div><span class="echev">▼</span></div><div class="ex-body"><p class="edesc">De salarisrange die het vaakst voorkomt. Middenwaarden worden afgerond naar het dichtstbijzijnde veelvoud van €500.</p><div class="eformula">€4.350 → bucket €4.500<br>€4.650 → bucket €4.500<br><span class="cm">→ €4.500 meeste vacatures → modaal = €4.500</span></div></div></div>
+<div class="ex-card"><div class="ex-hdr" onclick="toggleEx(this)"><div class="ex-title"><span class="edot" style="background:#f3f4f6;border:1.5px dashed #f59e0b;"></span>Gemiddelde range</div><span class="echev">▼</span></div><div class="ex-body"><p class="edesc">Gemiddelde van alle minimums als linkergrens, gemiddelde van alle maximums als rechtergrens. De zone daartussenin is de typische onderhandelingsruimte voor de huidige selectie.</p></div></div>
+
+<hr class="divider">
+<div class="explain-title">Aanvullende salarisbronnen</div>
+<p style="font-size:13px;color:#6b7280;margin-bottom:16px;line-height:1.6;">Onderstaande overzichten van <strong style="color:#374151;">uiuxjobsboard.com</strong> bieden aanvullende context over salarissen per ervaringsniveau in Nederland, gebaseerd op een bredere nationale en internationale dataset.</p>
+<div class="source-cards">
+  <a href="https://uiuxjobsboard.com/salary/product-designer/netherlands" target="_blank" class="source-card" style="background:#fff9ed;">
+    <div class="source-card-label" style="color:#92400e;">Product Design</div>
+    <div class="source-card-title" style="color:#111827;">Product Designer<br>salaris NL</div>
+    <div class="source-card-desc" style="color:#6b7280;">Salarisbenchmark per ervaringsniveau van entry-level tot principal/lead, inclusief gemiddelden per jaar.</div>
+    <div class="source-card-link" style="color:#d97706;">Bekijk overzicht →</div>
+  </a>
+  <a href="https://uiuxjobsboard.com/salary/ux-designer/netherlands" target="_blank" class="source-card" style="background:#f0fdf4;">
+    <div class="source-card-label" style="color:#065f46;">UX Design</div>
+    <div class="source-card-title" style="color:#111827;">UX Designer<br>salaris NL</div>
+    <div class="source-card-desc" style="color:#6b7280;">Overzicht van UX Designer salarissen in Nederland, opgesplitst naar senioriteit en marktgemiddelden.</div>
+    <div class="source-card-link" style="color:#059669;">Bekijk overzicht →</div>
+  </a>
+  <a href="https://uiuxjobsboard.com/salary/ui-ux-designer/netherlands" target="_blank" class="source-card" style="background:#eff6ff;">
+    <div class="source-card-label" style="color:#1d4ed8;">UI/UX Design</div>
+    <div class="source-card-title" style="color:#111827;">UI/UX Designer<br>salaris NL</div>
+    <div class="source-card-desc" style="color:#6b7280;">Gecombineerd salarisinzicht voor UI/UX rollen in Nederland, met ranges per ervaringsjaren.</div>
+    <div class="source-card-link" style="color:#2563eb;">Bekijk overzicht →</div>
+  </a>
+</div>
+
+</div>
+
+<script>
+const S_OFF='padding:7px 16px;font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;border-radius:100px;border:2px solid #9ca3af;background:#e5e7eb;color:#374151;white-space:nowrap;';
+const S_ON='padding:7px 16px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;border-radius:100px;border:2px solid #1d4ed8;background:#2563eb;color:#fff;white-space:nowrap;';
+const CM={agency:{l:'Digital agency',bg:'rgba(107,114,128,0.08)',bd:'rgba(107,114,128,0.3)',t:'#374151'},saas:{l:'SaaS & Product',bg:'rgba(59,130,246,0.08)',bd:'rgba(59,130,246,0.3)',t:'#1d4ed8'},corporate:{l:'Corporate',bg:'rgba(139,92,246,0.08)',bd:'rgba(139,92,246,0.3)',t:'#6d28d9'},nuts:{l:'Nuts & Energie',bg:'rgba(16,185,129,0.08)',bd:'rgba(16,185,129,0.3)',t:'#065f46'},gov:{l:'Overheid',bg:'rgba(245,158,11,0.1)',bd:'rgba(245,158,11,0.35)',t:'#92400e'},hightech:{l:'High-end / Tech',bg:'rgba(236,72,153,0.08)',bd:'rgba(236,72,153,0.3)',t:'#9d174d'},other:{l:'Overige',bg:'rgba(239,68,68,0.07)',bd:'rgba(239,68,68,0.25)',t:'#991b1b'}};
+const RM={uxui:{l:'UX/UI Design',bg:'rgba(236,72,153,0.08)',bd:'rgba(236,72,153,0.3)',t:'#9d174d'},product:{l:'Product Design',bg:'rgba(59,130,246,0.08)',bd:'rgba(59,130,246,0.3)',t:'#1d4ed8'},ux:{l:'UX Design',bg:'rgba(16,185,129,0.08)',bd:'rgba(16,185,129,0.3)',t:'#065f46'},ui:{l:'UI Design',bg:'rgba(139,92,246,0.08)',bd:'rgba(139,92,246,0.3)',t:'#6d28d9'},researcher:{l:'UX Research',bg:'rgba(245,158,11,0.1)',bd:'rgba(245,158,11,0.35)',t:'#92400e'},service:{l:'Service Design',bg:'rgba(107,114,128,0.08)',bd:'rgba(107,114,128,0.3)',t:'#374151'},other:{l:'Overig',bg:'rgba(239,68,68,0.07)',bd:'rgba(239,68,68,0.25)',t:'#991b1b'}};
+const LM={junior:{l:'Junior',bg:'rgba(16,185,129,0.08)',bd:'rgba(16,185,129,0.3)',t:'#065f46'},medior:{l:'Medior',bg:'rgba(59,130,246,0.08)',bd:'rgba(59,130,246,0.3)',t:'#1d4ed8'},senior:{l:'Senior',bg:'rgba(245,158,11,0.1)',bd:'rgba(245,158,11,0.35)',t:'#92400e'},lead:{l:'Lead',bg:'rgba(236,72,153,0.08)',bd:'rgba(236,72,153,0.3)',t:'#9d174d'},head:{l:'Head',bg:'rgba(139,92,246,0.08)',bd:'rgba(139,92,246,0.3)',t:'#6d28d9'}};
+const LEVELS=[['all','Alle'],['junior','Junior'],['medior','Medior'],['senior','Senior'],['lead','Lead'],['head','Head']];
+const ROLES=[['all','Alle rollen'],['uxui','UX/UI Design'],['product','Product Design'],['ux','UX Design'],['ui','UI Design'],['researcher','UX Research'],['service','Service Design'],['other','Overig']];
+const CATS=[['all','Alle'],['agency','Digital agency'],['saas','SaaS & Product'],['corporate','Corporate'],['nuts','Nuts & Energie'],['gov','Overheid'],['hightech','High-end / Tech'],['other','Overige']];
+const BASE=[{"name":"Koos Service Design","min":3107,"max":3792,"level":"junior","cat":"agency","role":"product"},{"name":"Lely","min":4100,"max":4100,"level":"junior","cat":"saas","role":"ux"},{"name":"Capgemini","min":3720,"max":3720,"level":"junior","cat":"agency","role":"ux"},{"name":"IVO Rechtspraak","min":4868,"max":4868,"level":"junior","cat":"gov","role":"uxui"},{"name":"VECOZO","min":3535,"max":3535,"level":"junior","cat":"saas","role":"uxui"},{"name":"ING","min":3173,"max":5251,"level":"junior","cat":"corporate","role":"ux"},{"name":"Voormedia","min":2850,"max":3250,"level":"junior","cat":"agency","role":"ux"},{"name":"Vivid Green","min":2500,"max":2900,"level":"junior","cat":"agency","role":"ux"},{"name":"Chocolate","min":2750,"max":3750,"level":"junior","cat":"other","role":"ux"},{"name":"Donderz","min":2500,"max":4000,"level":"junior","cat":"agency","role":"ux"},{"name":"Eurol","min":2500,"max":3000,"level":"junior","cat":"other","role":"ux"},{"name":"Jumbo","min":3900,"max":5100,"level":"junior","cat":"corporate","role":"ux"},{"name":"Antum","min":3200,"max":3800,"level":"junior","cat":"agency","role":"uxui"},{"name":"Nationale Nederlanden","min":3517,"max":5025,"level":"junior","cat":"corporate","role":"ux"},{"name":"Jungle Minds","min":2500,"max":3000,"level":"junior","cat":"agency","role":"ux"},{"name":"IND","min":3404,"max":5389,"level":"junior","cat":"gov","role":"other"},{"name":"WebNL","min":3427,"max":4890,"level":"medior","cat":"saas","role":"uxui"},{"name":"NGAGE IT","min":4500,"max":6500,"level":"medior","cat":"saas","role":"product"},{"name":"MB Effect","min":2700,"max":5500,"level":"medior","cat":"saas","role":"ux"},{"name":"Lefebvre Sdu","min":4470,"max":5790,"level":"medior","cat":"saas","role":"ux"},{"name":"TJIP","min":3000,"max":3700,"level":"medior","cat":"other","role":"uxui"},{"name":"Veldsink Groep","min":4000,"max":5720,"level":"medior","cat":"saas","role":"ux"},{"name":"Topicus","min":3565,"max":3565,"level":"medior","cat":"saas","role":"ux"},{"name":"Paragin Group","min":3750,"max":4600,"level":"medior","cat":"saas","role":"ui"},{"name":"MatchMatters","min":4000,"max":5500,"level":"medior","cat":"saas","role":"ux"},{"name":"12Build","min":4700,"max":5500,"level":"medior","cat":"saas","role":"product"},{"name":"Plug&Play","min":4000,"max":5500,"level":"medior","cat":"saas","role":"uxui"},{"name":"Froge","min":3500,"max":4500,"level":"medior","cat":"agency","role":"uxui"},{"name":"Publitas.com","min":4166,"max":5833,"level":"medior","cat":"saas","role":"product"},{"name":"Belastingdienst","min":4024,"max":6110,"level":"medior","cat":"gov","role":"uxui"},{"name":"JUSTIN Recruitment","min":3900,"max":5800,"level":"medior","cat":"saas","role":"ux"},{"name":"Ministerie van Defensie","min":4772,"max":6549,"level":"medior","cat":"gov","role":"uxui"},{"name":"Mealtime","min":4583,"max":6667,"level":"medior","cat":"saas","role":"uxui"},{"name":"H2L Robotics","min":3500,"max":5000,"level":"medior","cat":"saas","role":"uxui"},{"name":"OMRT","min":3333,"max":4166,"level":"medior","cat":"saas","role":"uxui"},{"name":"Lely","min":4800,"max":4800,"level":"medior","cat":"saas","role":"ux"},{"name":"Enexis","min":5000,"max":5000,"level":"medior","cat":"nuts","role":"ux"},{"name":"TommyTomato","min":4000,"max":4800,"level":"medior","cat":"saas","role":"product"},{"name":"2DIGITS","min":2800,"max":3600,"level":"medior","cat":"agency","role":"uxui"},{"name":"Medicore","min":4250,"max":6250,"level":"medior","cat":"saas","role":"ux"},{"name":"Promptwatch","min":4583,"max":7083,"level":"medior","cat":"saas","role":"product"},{"name":"Rabobank","min":3869,"max":5526,"level":"medior","cat":"corporate","role":"ux"},{"name":"Univé","min":5402,"max":7762,"level":"medior","cat":"other","role":"ux"},{"name":"Openred","min":3000,"max":5000,"level":"medior","cat":"saas","role":"ux"},{"name":"Koos Service Design","min":3758,"max":4832,"level":"medior","cat":"agency","role":"product"},{"name":"EDSN","min":4583,"max":6000,"level":"medior","cat":"nuts","role":"ux"},{"name":"Plug&Play","min":4000,"max":5500,"level":"medior","cat":"saas","role":"uxui"},{"name":"Visma Idella","min":4700,"max":5800,"level":"medior","cat":"other","role":"ux"},{"name":"NCSC","min":3404,"max":3404,"level":"medior","cat":"gov","role":"ux"},{"name":"Proud Nerds","min":3500,"max":4500,"level":"medior","cat":"agency","role":"ux"},{"name":"Campercontact","min":3000,"max":4800,"level":"medior","cat":"saas","role":"uxui"},{"name":"Chargee Energy","min":4000,"max":5000,"level":"medior","cat":"saas","role":"ux"},{"name":"Forge","min":4500,"max":5000,"level":"medior","cat":"agency","role":"uxui"},{"name":"PostNL","min":4589,"max":6499,"level":"medior","cat":"corporate","role":"ux"},{"name":"CJIB","min":4691,"max":6907,"level":"medior","cat":"gov","role":"service"},{"name":"Purple Media","min":3600,"max":4400,"level":"medior","cat":"agency","role":"ux"},{"name":"ANWB","min":3617,"max":5805,"level":"medior","cat":"corporate","role":"ux"},{"name":"ZorgDomein","min":3400,"max":4000,"level":"medior","cat":"other","role":"ux"},{"name":"TimeChimp","min":4343,"max":5876,"level":"medior","cat":"saas","role":"product"},{"name":"51North","min":3600,"max":3600,"level":"medior","cat":"saas","role":"ux"},{"name":"ABN AMRO","min":4086,"max":5800,"level":"medior","cat":"corporate","role":"ux"},{"name":"Hostnet","min":3200,"max":3600,"level":"medior","cat":"saas","role":"product"},{"name":"Futurewhiz","min":4000,"max":5500,"level":"medior","cat":"saas","role":"ux"},{"name":"TaxModel","min":3050,"max":4490,"level":"medior","cat":"saas","role":"product"},{"name":"KLM","min":4295,"max":6136,"level":"medior","cat":"corporate","role":"product"},{"name":"RVO","min":4024,"max":6110,"level":"medior","cat":"gov","role":"uxui"},{"name":"Gazelle","min":4300,"max":5500,"level":"medior","cat":"saas","role":"ux"},{"name":"Sociale Verzekeringsbank","min":4834,"max":6395,"level":"medior","cat":"gov","role":"ux"},{"name":"Efteling","min":3397,"max":4998,"level":"medior","cat":"corporate","role":"ux"},{"name":"Alliander","min":4580,"max":6543,"level":"medior","cat":"nuts","role":"ux"},{"name":"Coöperatie VGZ","min":4968,"max":7095,"level":"medior","cat":"corporate","role":"ux"},{"name":"Nmbrs","min":3800,"max":5000,"level":"medior","cat":"saas","role":"product"},{"name":"Garansys","min":3600,"max":4500,"level":"medior","cat":"saas","role":"uxui"},{"name":"Landal","min":3630,"max":5185,"level":"medior","cat":"saas","role":"product"},{"name":"Stedin","min":6085,"max":7059,"level":"medior","cat":"nuts","role":"ux"},{"name":"Gaia Ecologie","min":3000,"max":4000,"level":"medior","cat":"other","role":"uxui"},{"name":"Bakker & Spees","min":3200,"max":5000,"level":"medior","cat":"agency","role":"uxui"},{"name":"Striive","min":4250,"max":7000,"level":"medior","cat":"saas","role":"product"},{"name":"UWV","min":6583,"max":6583,"level":"medior","cat":"gov","role":"ux"},{"name":"Hostinger","min":4470,"max":6500,"level":"medior","cat":"saas","role":"product"},{"name":"Studio Doppelgänger","min":4580,"max":4580,"level":"medior","cat":"agency","role":"uxui"},{"name":"Unilever","min":5400,"max":7416,"level":"senior","cat":"corporate","role":"ux"},{"name":"Nationale-Nederlanden","min":5095,"max":7278,"level":"senior","cat":"corporate","role":"researcher"},{"name":"Europol","min":4449,"max":6444,"level":"senior","cat":"gov","role":"other"},{"name":"Gemeente Amsterdam","min":4465,"max":6343,"level":"senior","cat":"gov","role":"other"},{"name":"Rabobank","min":5876,"max":8395,"level":"senior","cat":"corporate","role":"uxui"},{"name":"Eneco","min":6666,"max":7916,"level":"senior","cat":"nuts","role":"product"},{"name":"Simacan","min":3725,"max":6085,"level":"senior","cat":"saas","role":"ux"},{"name":"Jumbo","min":5200,"max":6700,"level":"senior","cat":"corporate","role":"service"},{"name":"ABN AMRO","min":5112,"max":7303,"level":"senior","cat":"corporate","role":"researcher"},{"name":"Politie","min":4423,"max":6490,"level":"senior","cat":"gov","role":"service"},{"name":"Keylane","min":6000,"max":7000,"level":"senior","cat":"saas","role":"researcher"},{"name":"Keylane","min":6000,"max":7000,"level":"senior","cat":"saas","role":"ux"},{"name":"Postcode Loterij","min":4900,"max":6000,"level":"senior","cat":"corporate","role":"product"},{"name":"Smartner","min":3500,"max":4250,"level":"senior","cat":"agency","role":"ux"},{"name":"Infomedics","min":6000,"max":6500,"level":"senior","cat":"corporate","role":"ux"},{"name":"Norday","min":3500,"max":4700,"level":"senior","cat":"agency","role":"other"},{"name":"Kaliber","min":4500,"max":5500,"level":"senior","cat":"agency","role":"product"},{"name":"NHG","min":5512,"max":7085,"level":"senior","cat":"other","role":"researcher"},{"name":"Remote","min":4779,"max":10754,"level":"senior","cat":"hightech","role":"product"},{"name":"Essense","min":4000,"max":5200,"level":"senior","cat":"saas","role":"uxui"},{"name":"DotControl","min":4500,"max":5700,"level":"senior","cat":"agency","role":"other"},{"name":"Saxum","min":3800,"max":5500,"level":"senior","cat":"agency","role":"product"},{"name":"Achmea","min":4149,"max":5697,"level":"senior","cat":"corporate","role":"other"},{"name":"Booking.com","min":4166,"max":9166,"level":"senior","cat":"hightech","role":"service"},{"name":"EDSN","min":5000,"max":6000,"level":"senior","cat":"nuts","role":"uxui"},{"name":"Ministerie van BZK","min":5212,"max":7747,"level":"senior","cat":"gov","role":"service"},{"name":"Gemeente Rotterdam","min":4465,"max":6343,"level":"senior","cat":"gov","role":"other"},{"name":"Photoroom","min":5416,"max":7083,"level":"senior","cat":"saas","role":"product"},{"name":"Brainial","min":7500,"max":7500,"level":"senior","cat":"saas","role":"ux"},{"name":"CGI","min":4300,"max":6700,"level":"senior","cat":"agency","role":"ux"},{"name":"Nedap","min":4000,"max":5800,"level":"senior","cat":"saas","role":"ux"},{"name":"NOWATCH","min":4166,"max":5000,"level":"senior","cat":"corporate","role":"other"},{"name":"Equalture","min":4000,"max":5500,"level":"senior","cat":"corporate","role":"ux"},{"name":"Progresity","min":4075,"max":5575,"level":"senior","cat":"saas","role":"researcher"},{"name":"Mediahuis","min":3562,"max":5845,"level":"senior","cat":"corporate","role":"product"},{"name":"Albert Heijn","min":4583,"max":6583,"level":"senior","cat":"corporate","role":"other"},{"name":"Nedap","min":4200,"max":5800,"level":"senior","cat":"saas","role":"ux"},{"name":"SuperYacht Times","min":3000,"max":4000,"level":"senior","cat":"other","role":"product"},{"name":"Comper","min":6667,"max":8333,"level":"senior","cat":"saas","role":"product"},{"name":"BeterBed","min":4000,"max":4750,"level":"senior","cat":"corporate","role":"uxui"},{"name":"Maqqie","min":3700,"max":5500,"level":"senior","cat":"corporate","role":"ux"},{"name":"RVO","min":3400,"max":5389,"level":"senior","cat":"gov","role":"service"},{"name":"Rabobank","min":4516,"max":6449,"level":"senior","cat":"corporate","role":"ux"},{"name":"ABN AMRO","min":4092,"max":5846,"level":"senior","cat":"corporate","role":"ux"},{"name":"Eneco","min":6666,"max":7919,"level":"senior","cat":"nuts","role":"product"},{"name":"INSO","min":5200,"max":5200,"level":"lead","cat":"agency","role":"product"},{"name":"Consumentenbond","min":4056,"max":6350,"level":"lead","cat":"corporate","role":"uxui"},{"name":"Learneo","min":7833,"max":15056,"level":"lead","cat":"hightech","role":"product"},{"name":"Unilever","min":5400,"max":7416,"level":"lead","cat":"corporate","role":"ux"},{"name":"Linku","min":4800,"max":5500,"level":"lead","cat":"saas","role":"researcher"},{"name":"DUO","min":4691,"max":6907,"level":"lead","cat":"gov","role":"ux"},{"name":"Postcode Loterij","min":6200,"max":8200,"level":"lead","cat":"corporate","role":"product"},{"name":"Blockrise","min":4000,"max":5000,"level":"lead","cat":"other","role":"uxui"},{"name":"Rabobank","min":5876,"max":8395,"level":"lead","cat":"corporate","role":"ux"},{"name":"Postcode Loterij","min":6200,"max":8200,"level":"lead","cat":"corporate","role":"researcher"},{"name":"Mediq","min":6000,"max":7200,"level":"lead","cat":"saas","role":"product"},{"name":"KPN","min":5742,"max":8865,"level":"lead","cat":"corporate","role":"other"},{"name":"Remote","min":5708,"max":12841,"level":"lead","cat":"hightech","role":"product"},{"name":"Politie","min":4335,"max":6362,"level":"lead","cat":"gov","role":"ux"},{"name":"QuillBot","min":7833,"max":10583,"level":"lead","cat":"hightech","role":"product"},{"name":"Natuurhuisje","min":4500,"max":6200,"level":"lead","cat":"saas","role":"other"},{"name":"ING","min":6500,"max":10389,"level":"lead","cat":"corporate","role":"ux"},{"name":"Rabobank","min":5381,"max":7687,"level":"lead","cat":"corporate","role":"ux"},{"name":"Digital Agency","min":6000,"max":6500,"level":"lead","cat":"agency","role":"ux"},{"name":"PLUS Retail","min":5608,"max":8000,"level":"lead","cat":"corporate","role":"other"},{"name":"Happy Horizon","min":4500,"max":5500,"level":"lead","cat":"agency","role":"ux"},{"name":"ABN AMRO","min":6793,"max":9704,"level":"lead","cat":"corporate","role":"service"},{"name":"ABN AMRO","min":5847,"max":8353,"level":"lead","cat":"corporate","role":"ux"},{"name":"All Funeral Services","min":5700,"max":10800,"level":"lead","cat":"saas","role":"product"},{"name":"Picqer","min":6500,"max":8370,"level":"lead","cat":"saas","role":"product"},{"name":"KPN","min":5742,"max":8865,"level":"lead","cat":"corporate","role":"ux"},{"name":"Virtual Vaults","min":4500,"max":5800,"level":"lead","cat":"saas","role":"ux"},{"name":"Jumbo","min":5700,"max":7300,"level":"lead","cat":"corporate","role":"other"},{"name":"Mobiel.nl","min":6000,"max":7000,"level":"lead","cat":"saas","role":"ux"},{"name":"Proud Nerds","min":3750,"max":5500,"level":"lead","cat":"agency","role":"ux"},{"name":"Mosadex","min":3875,"max":6200,"level":"lead","cat":"saas","role":"ux"},{"name":"PGGM","min":5337,"max":7624,"level":"lead","cat":"corporate","role":"other"},{"name":"SkillLab","min":7083,"max":8333,"level":"lead","cat":"saas","role":"ux"},{"name":"MyWheels","min":5000,"max":6000,"level":"lead","cat":"saas","role":"uxui"},{"name":"On Air","min":5000,"max":6666,"level":"lead","cat":"saas","role":"product"},{"name":"Gameplay Galaxy","min":8628,"max":9245,"level":"lead","cat":"saas","role":"uxui"},{"name":"AS Watson","min":5500,"max":8180,"level":"lead","cat":"corporate","role":"ux"},{"name":"Client Server","min":10833,"max":10833,"level":"head","cat":"hightech","role":"product"},{"name":"BUUT","min":5847,"max":8353,"level":"head","cat":"corporate","role":"product"},{"name":"OSAGE","min":4500,"max":5500,"level":"head","cat":"agency","role":"other"},{"name":"ON THAT ASS","min":4500,"max":6800,"level":"head","cat":"corporate","role":"other"},{"name":"OSAGE","min":4500,"max":5500,"level":"head","cat":"agency","role":"ux"},{"name":"Depot","min":16667,"max":20833,"level":"head","cat":"hightech","role":"product"},{"name":"Intaker","min":8333,"max":12500,"level":"head","cat":"saas","role":"product"},{"name":"TOPdesk","min":7500,"max":9500,"level":"head","cat":"saas","role":"ux"},{"name":"Gitlab","min":12500,"max":16666,"level":"head","cat":"hightech","role":"product"}];
+const SK='ux_salary_v25';
+let custom=[],all=[...BASE],aL='all',aC='all',aR='all';
+function save(){try{localStorage.setItem(SK,JSON.stringify(custom));}catch(e){}}
+function load(){try{const r=localStorage.getItem(SK);if(r){custom=JSON.parse(r);all=[...BASE,...custom];}}catch(e){}}
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200);}
+const gM=d=>(d.min+d.max)/2;
+const fmt=v=>'€'+Math.round(v).toLocaleString('nl-NL');
+function mkBtn(label,onclick,isOn){const b=document.createElement('button');b.textContent=label;b.setAttribute('style',isOn?S_ON:S_OFF);b.onclick=onclick;return b;}
+function buildFilters(){
+  const lb=document.getElementById('level-btns'),rb=document.getElementById('role-btns'),cb=document.getElementById('cat-btns');
+  lb.innerHTML='';rb.innerHTML='';cb.innerHTML='';
+  LEVELS.forEach(([v,l])=>lb.appendChild(mkBtn(l,function(){aL=v;buildFilters();render();},aL===v)));
+  ROLES.forEach(([v,l])=>rb.appendChild(mkBtn(l,function(){aR=v;buildFilters();render();},aR===v)));
+  CATS.forEach(([v,l])=>cb.appendChild(mkBtn(l,function(){aC=v;buildFilters();render();},aC===v)));
+}
+function resetFilters(){aL='all';aC='all';aR='all';document.getElementById('search').value='';buildFilters();render();}
+function toggleForm(){const f=document.getElementById('addForm');const op=f.style.display==='block';f.style.display=op?'none':'block';if(!op)document.getElementById('f-name').focus();}
+function addEntry(){
+  const name=document.getElementById('f-name').value.trim(),min=parseInt(document.getElementById('f-min').value),max=parseInt(document.getElementById('f-max').value);
+  if(!name){toast('Vul een bedrijfsnaam in');return;}
+  if(isNaN(min)||min<=0){toast('Vul een geldig min. salaris in');return;}
+  if(isNaN(max)||max<=0){toast('Vul een geldig max. salaris in');return;}
+  if(max<min){toast('Max. moet hoger zijn dan min.');return;}
+  const e={id:Date.now(),name,min,max,level:document.getElementById('f-level').value,cat:document.getElementById('f-cat').value,role:document.getElementById('f-role').value,custom:true};
+  custom.push(e);all=[...BASE,...custom];
+  document.getElementById('f-name').value='';document.getElementById('f-min').value='';document.getElementById('f-max').value='';
+  document.getElementById('addForm').style.display='none';
+  save();render();toast('Vacature toegevoegd ✓');
+}
+function deleteEntry(id){custom=custom.filter(e=>e.id!==id);all=[...BASE,...custom];save();render();toast('Verwijderd');}
+function calcStats(arr){
+  if(!arr.length)return null;
+  const mids=arr.map(gM).sort((a,b)=>a-b);
+  const avg=mids.reduce((a,b)=>a+b,0)/mids.length;
+  const median=mids.length%2===0?(mids[mids.length/2-1]+mids[mids.length/2])/2:mids[Math.floor(mids.length/2)];
+  const freq={};arr.forEach(d=>{const b=Math.round(gM(d)/500)*500;freq[b]=(freq[b]||0)+1;});
+  const mode=parseInt(Object.entries(freq).sort((a,b)=>b[1]-a[1])[0][0]);
+  return{avg,median,mode,lo:Math.min(...arr.map(d=>d.min)),hi:Math.max(...arr.map(d=>d.max)),avgMin:arr.reduce((a,d)=>a+d.min,0)/arr.length,avgMax:arr.reduce((a,d)=>a+d.max,0)/arr.length};
+}
+function getFiltered(){
+  const q=document.getElementById('search').value.toLowerCase();
+  return all.filter(d=>{
+    if(aL!=='all'&&d.level!==aL)return false;
+    if(aC!=='all'&&d.cat!==aC)return false;
+    if(aR!=='all'&&d.role!==aR)return false;
+    if(q&&!d.name.toLowerCase().includes(q))return false;
+    return true;
+  });
+}
+function render(){
+  const f=getFiltered(),s=calcStats(f);
+  document.getElementById('countLabel').textContent=f.length+' vacatures';
+  if(!s){document.getElementById('stats').innerHTML='';document.getElementById('avgRangeBar').innerHTML='';document.getElementById('jobList').innerHTML='<div class="empty">Geen vacatures gevonden.</div>';return;}
+  document.getElementById('stats').innerHTML=`<div class="stat-card hl"><p class="stat-label">Gem. salarisrange</p><p class="stat-value">${fmt(s.avgMin)} – ${fmt(s.avgMax)}</p><p class="stat-sub">gemiddelde van alle min. en max. salarissen</p></div><div class="stat-card"><p class="stat-label">Mediaan</p><p class="stat-value">${fmt(s.median)}</p><p class="stat-sub">helft zit eronder, helft erboven</p></div><div class="stat-card"><p class="stat-label">Modaal</p><p class="stat-value">${fmt(s.mode)}</p><p class="stat-sub">meest voorkomend salaris</p></div>`;
+  const sc=s.hi*1.05,lp=(s.avgMin/sc*100).toFixed(1),wp=((s.avgMax-s.avgMin)/sc*100).toFixed(1),mP=(s.avg/sc*100).toFixed(1),mdP=(s.median/sc*100).toFixed(1);
+  document.getElementById('avgRangeBar').innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;"><span style="font-size:10px;color:#9ca3af;text-transform:uppercase;letter-spacing:.08em;font-weight:600;">Gemiddelde salarisrange van selectie</span><span style="font-size:12px;color:#374151;font-weight:600;">${fmt(s.avgMin)} – ${fmt(s.avgMax)}</span></div><div style="position:relative;height:20px;margin-bottom:12px;"><div style="position:absolute;top:50%;transform:translateY(-50%);left:0;right:0;height:8px;background:#e5e7eb;border-radius:4px;"></div><div style="position:absolute;top:50%;transform:translateY(-50%);left:${lp}%;width:${wp}%;height:16px;background:rgba(245,158,11,0.15);border:2px dashed rgba(245,158,11,0.55);border-radius:5px;"></div><div style="position:absolute;top:0;bottom:0;width:2.5px;left:${mP}%;background:#f59e0b;border-radius:2px;"></div><div style="position:absolute;top:0;bottom:0;width:2.5px;left:${mdP}%;background:#ef4444;border-radius:2px;"></div></div><div style="display:flex;gap:16px;flex-wrap:wrap;font-size:11px;color:#9ca3af;"><span style="display:flex;align-items:center;gap:5px;"><span style="width:10px;height:10px;border-radius:2px;background:rgba(245,158,11,0.15);border:2px dashed rgba(245,158,11,0.55);display:inline-block;"></span>Gem. range</span><span style="display:flex;align-items:center;gap:5px;"><span style="width:2.5px;height:10px;background:#f59e0b;display:inline-block;border-radius:1px;"></span>Gem. midden: ${fmt(s.avg)}</span><span style="display:flex;align-items:center;gap:5px;"><span style="width:2.5px;height:10px;background:#ef4444;display:inline-block;border-radius:1px;"></span>Mediaan: ${fmt(s.median)}</span></div>`;
+  const aM=s.hi;
+  document.getElementById('jobList').innerHTML=[...f].sort((a,b)=>gM(a)-gM(b)).map(d=>{
+    const c=CM[d.cat]||CM.other,r=RM[d.role]||RM.other,lv=LM[d.level]||LM.medior;
+    const lf=(d.min/aM*100).toFixed(2),wd=Math.max((d.max-d.min)/aM*100,0.5).toFixed(2);
+    const med=(s.median/aM*100).toFixed(2),avgm=(s.avg/aM*100).toFixed(2);
+    const aw=(s.avgMin/aM*100).toFixed(2),aww=Math.max((s.avgMax-s.avgMin)/aM*100,0.5).toFixed(2);
+    const badge=d.custom?`<span style="font-size:10px;padding:1px 6px;border-radius:5px;background:#f0fdf4;color:#166534;border:1px solid #bbf7d0;margin-left:5px;font-weight:500;">eigen</span>`:'';
+    const delBtn=d.custom?`<button onclick="deleteEntry(${d.id})" style="width:22px;height:22px;border-radius:6px;border:none;background:transparent;color:#d1d5db;cursor:pointer;font-size:13px;">✕</button>`:`<span></span>`;
+    return`<div class="job-row"><span class="job-name" title="${d.name}">${d.name.length>20?d.name.slice(0,18)+'…':d.name}${badge}</span><span class="chip-lvl" style="background:${lv.bg};border-color:${lv.bd};color:${lv.t};">${lv.l}</span><span class="chip-role" style="background:${r.bg};border-color:${r.bd};color:${r.t};">${r.l}</span><span class="chip-cat" style="background:${c.bg};border-color:${c.bd};color:${c.t};">${c.l}</span><div class="bar-cell"><div style="position:absolute;top:50%;transform:translateY(-50%);left:${aw}%;width:${aww}%;height:100%;background:rgba(245,158,11,0.12);border:1.5px dashed rgba(245,158,11,0.4);border-radius:5px;"></div><div class="bar-fill" data-left="${lf}" data-width="${wd}"></div><div class="bar-marker" style="left:${med}%;background:#ef4444;"></div><div class="bar-marker" style="left:${avgm}%;background:#f59e0b;"></div></div><span class="val-cell">${d.min===d.max?fmt(d.min):fmt(d.min)+' – '+fmt(d.max)}</span>${delBtn}</div>`;
+  }).join('');
+  requestAnimationFrame(()=>{document.querySelectorAll('.bar-fill').forEach((bar,i)=>{bar.style.left=bar.dataset.left+'%';bar.style.width='0%';setTimeout(()=>{bar.style.width=bar.dataset.width+'%';},i*18+50);});});
+}
+function toggleEx(h){const b=h.nextElementSibling;const c=h.querySelector('.echev');const o=b.classList.contains('open');b.classList.toggle('open',!o);c.classList.toggle('open',!o);}
+load();buildFilters();render();
+</script>
+</body>
+</html>
