@@ -45,6 +45,7 @@ input[type=text],input[type=number],select{font-size:13px;padding:8px 11px;borde
 .del-btn{width:26px;height:26px;border-radius:6px;border:none;background:transparent;color:#d1d5db;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;padding:0;transition:all .12s;flex-shrink:0;}
 .del-btn:hover{background:#fee2e2;color:#ef4444;}
 .empty{text-align:center;padding:48px;color:#d1d5db;font-size:14px;}
+.loading{text-align:center;padding:48px;color:#9ca3af;font-size:14px;}
 .divider{border:none;border-top:1px solid #e5e7eb;margin:32px 0;}
 .explain-title{font-size:10px;color:#9ca3af;text-transform:uppercase;letter-spacing:.08em;margin-bottom:14px;font-weight:600;}
 .ex-card{border:1.5px solid #e5e7eb;border-radius:10px;margin-bottom:8px;overflow:hidden;}
@@ -58,12 +59,12 @@ input[type=text],input[type=number],select{font-size:13px;padding:8px 11px;borde
 .ex-body.open{display:block;}
 .edesc{font-size:13px;color:#6b7280;line-height:1.7;margin-top:12px;}
 .eformula{background:#fff;border:1.5px solid #e5e7eb;border-radius:8px;padding:11px 14px;margin:10px 0;font-size:12px;color:#374151;font-family:ui-monospace,monospace;line-height:1.7;}
-.eformula .cm{color:#d1d5db;}
 .source-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:8px;}
 .source-card{border-radius:12px;padding:18px 20px;text-decoration:none;display:block;transition:transform .15s,box-shadow .15s;}
 .source-card:hover{transform:translateY(-2px);box-shadow:0 4px 16px rgba(0,0,0,0.1);}
 .toast-wrap{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(80px);background:#111827;color:#fff;padding:10px 20px;border-radius:10px;font-size:13px;opacity:0;transition:all .2s;z-index:999;pointer-events:none;}
 .toast-wrap.show{transform:translateX(-50%) translateY(0);opacity:1;}
+.error-bar{background:#fee2e2;border:1px solid #fca5a5;color:#991b1b;padding:12px 16px;border-radius:10px;font-size:13px;margin-bottom:16px;display:none;}
 </style>
 </head>
 <body>
@@ -72,10 +73,12 @@ input[type=text],input[type=number],select{font-size:13px;padding:8px 11px;borde
 
 <div style="display:flex;align-items:center;gap:6px;margin-bottom:20px;font-size:12px;color:#9ca3af;">
   <svg width="13" height="13" viewBox="0 0 16 16" fill="none" style="flex-shrink:0;"><circle cx="8" cy="8" r="7" stroke="#9ca3af" stroke-width="1.5"/><path d="M8 7v5M8 5v.5" stroke="#9ca3af" stroke-width="1.5" stroke-linecap="round"/></svg>
-  Gebaseerd op 177 vacatures van
+  Gebaseerd op vacatures van
   <a href="https://uxwork.nl/en/" target="_blank" style="color:#2563eb;text-decoration:none;font-weight:500;">uxwork.nl</a>
   &mdash; Een vacaturesite voor UX &amp; product design functies
 </div>
+
+<div class="error-bar" id="errorBar"></div>
 
 <div class="toolbar">
   <input type="text" id="search" placeholder="Zoek op bedrijfsnaam..." oninput="render()">
@@ -119,14 +122,14 @@ input[type=text],input[type=number],select{font-size:13px;padding:8px 11px;borde
 <div class="col-header">
   <span>Bedrijf</span><span>Niveau</span><span>Rol</span><span>Sector</span><span>Range</span><span style="text-align:right;">Min &ndash; Max</span><span></span>
 </div>
-<div id="jobList"></div>
+<div id="jobList"><div class="loading">Data laden...</div></div>
 
 <hr class="divider">
 <div class="explain-title">Hoe worden de cijfers berekend?</div>
-<div class="ex-card"><div class="ex-hdr" onclick="toggleEx(this)"><div class="ex-title"><span class="edot" style="background:#f59e0b;"></span>Gemiddeld middensalaris</div><span class="echev">&#9660;</span></div><div class="ex-body"><p class="edesc">Van elke vacature berekenen we het midden tussen min en max. Daarna nemen we het gemiddelde van al die middenwaarden.</p><div class="eformula">middensalaris = (min + max) / 2<br><span class="cm">bijv. &euro;4.000 &ndash; &euro;6.000 &rarr; midden = &euro;5.000</span><br><br>gemiddelde = som van alle middens / aantal</div></div></div>
-<div class="ex-card"><div class="ex-hdr" onclick="toggleEx(this)"><div class="ex-title"><span class="edot" style="background:#ef4444;"></span>Mediaan</div><span class="echev">&#9660;</span></div><div class="ex-body"><p class="edesc">Het middelste getal als alle middenwaarden gesorteerd zijn. Helft zit eronder, helft erboven. Robuuster dan het gemiddelde en het eerlijkste referentiepunt voor onderhandelingen.</p><div class="eformula">sorteer: [3.200, 3.800, <strong>4.500</strong>, 5.100, 7.000]<br><span class="cm">&rarr; mediaan = &euro;4.500</span></div></div></div>
-<div class="ex-card"><div class="ex-hdr" onclick="toggleEx(this)"><div class="ex-title"><span class="edot" style="background:#8b5cf6;"></span>Modaal</div><span class="echev">&#9660;</span></div><div class="ex-body"><p class="edesc">De salarisrange die het vaakst voorkomt. Middenwaarden worden afgerond naar het dichtstbijzijnde veelvoud van &euro;500.</p><div class="eformula">&euro;4.350 &rarr; bucket &euro;4.500<br>&euro;4.650 &rarr; bucket &euro;4.500<br><span class="cm">&rarr; &euro;4.500 meeste vacatures &rarr; modaal = &euro;4.500</span></div></div></div>
-<div class="ex-card"><div class="ex-hdr" onclick="toggleEx(this)"><div class="ex-title"><span class="edot" style="background:#f3f4f6;border:1.5px dashed #f59e0b;"></span>Gemiddelde range</div><span class="echev">&#9660;</span></div><div class="ex-body"><p class="edesc">Gemiddelde van alle minimums als linkergrens, gemiddelde van alle maximums als rechtergrens. De zone daartussenin is de typische onderhandelingsruimte voor de huidige selectie.</p></div></div>
+<div class="ex-card"><div class="ex-hdr" onclick="toggleEx(this)"><div class="ex-title"><span class="edot" style="background:#f59e0b;"></span>Gemiddeld middensalaris</div><span class="echev">&#9660;</span></div><div class="ex-body"><p class="edesc">Van elke vacature berekenen we het midden tussen min en max. Daarna nemen we het gemiddelde van al die middenwaarden.</p><div class="eformula">middensalaris = (min + max) / 2<br>gemiddelde = som van alle middens / aantal</div></div></div>
+<div class="ex-card"><div class="ex-hdr" onclick="toggleEx(this)"><div class="ex-title"><span class="edot" style="background:#ef4444;"></span>Mediaan</div><span class="echev">&#9660;</span></div><div class="ex-body"><p class="edesc">Het middelste getal als alle middenwaarden gesorteerd zijn. Helft zit eronder, helft erboven.</p></div></div>
+<div class="ex-card"><div class="ex-hdr" onclick="toggleEx(this)"><div class="ex-title"><span class="edot" style="background:#8b5cf6;"></span>Modaal</div><span class="echev">&#9660;</span></div><div class="ex-body"><p class="edesc">De salarisrange die het vaakst voorkomt. Middenwaarden worden afgerond naar het dichtstbijzijnde veelvoud van &euro;500.</p></div></div>
+<div class="ex-card"><div class="ex-hdr" onclick="toggleEx(this)"><div class="ex-title"><span class="edot" style="background:#f3f4f6;border:1.5px dashed #f59e0b;"></span>Gemiddelde range</div><span class="echev">&#9660;</span></div><div class="ex-body"><p class="edesc">Gemiddelde van alle minimums als linkergrens, gemiddelde van alle maximums als rechtergrens.</p></div></div>
 
 <hr class="divider">
 <div class="explain-title">Aanvullende salarisbronnen</div>
@@ -135,43 +138,128 @@ input[type=text],input[type=number],select{font-size:13px;padding:8px 11px;borde
   <a href="https://uiuxjobsboard.com/salary/product-designer/netherlands" target="_blank" class="source-card" style="background:#fff9ed;">
     <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;color:#92400e;">Product Design</div>
     <div style="font-size:15px;font-weight:700;margin-bottom:6px;line-height:1.3;color:#111827;">Product Designer<br>salaris NL</div>
-    <div style="font-size:12px;line-height:1.5;color:#6b7280;margin-bottom:14px;">Salarisbenchmark per ervaringsniveau van entry-level tot principal/lead, inclusief gemiddelden per jaar.</div>
+    <div style="font-size:12px;line-height:1.5;color:#6b7280;margin-bottom:14px;">Salarisbenchmark per ervaringsniveau van entry-level tot principal/lead.</div>
     <div style="font-size:11px;font-weight:600;color:#d97706;">Bekijk overzicht &rarr;</div>
   </a>
   <a href="https://uiuxjobsboard.com/salary/ui-ux-designer/netherlands" target="_blank" class="source-card" style="background:#eff6ff;">
     <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;color:#1d4ed8;">UI/UX Design</div>
     <div style="font-size:15px;font-weight:700;margin-bottom:6px;line-height:1.3;color:#111827;">UI/UX Designer<br>salaris NL</div>
-    <div style="font-size:12px;line-height:1.5;color:#6b7280;margin-bottom:14px;">Gecombineerd salarisinzicht voor UI/UX rollen in Nederland, met ranges per ervaringsjaren.</div>
+    <div style="font-size:12px;line-height:1.5;color:#6b7280;margin-bottom:14px;">Gecombineerd salarisinzicht voor UI/UX rollen in Nederland.</div>
     <div style="font-size:11px;font-weight:600;color:#2563eb;">Bekijk overzicht &rarr;</div>
   </a>
   <a href="https://uiuxjobsboard.com/salary/ux-designer/netherlands" target="_blank" class="source-card" style="background:#f0fdf4;">
     <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;color:#065f46;">UX Design</div>
     <div style="font-size:15px;font-weight:700;margin-bottom:6px;line-height:1.3;color:#111827;">UX Designer<br>salaris NL</div>
-    <div style="font-size:12px;line-height:1.5;color:#6b7280;margin-bottom:14px;">Overzicht van UX Designer salarissen in Nederland, opgesplitst naar senioriteit en marktgemiddelden.</div>
+    <div style="font-size:12px;line-height:1.5;color:#6b7280;margin-bottom:14px;">Salarissen in Nederland opgesplitst naar senioriteit.</div>
     <div style="font-size:11px;font-weight:600;color:#059669;">Bekijk overzicht &rarr;</div>
   </a>
 </div>
 
 </div>
 <script>
+// ── Supabase config ──────────────────────────────────────────
+const SUPA_URL = 'https://jycswjnmzcpfjlvwdqlp.supabase.co';
+const SUPA_KEY = 'sb_publishable_keyH2XV0Drxpt7mHZ15Qqg_05CUP74d';
 
+// ── Styles ───────────────────────────────────────────────────
 const S_OFF='padding:7px 16px;font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;border-radius:100px;border:2px solid #9ca3af;background:#e5e7eb;color:#374151;white-space:nowrap;';
-const S_ON='padding:7px 16px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;border-radius:100px;border:2px solid #1d4ed8;background:#2563eb;color:#fff;white-space:nowrap;';
+const S_ON ='padding:7px 16px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;border-radius:100px;border:2px solid #1d4ed8;background:#2563eb;color:#fff;white-space:nowrap;';
+
+// ── Maps ─────────────────────────────────────────────────────
 const CM={agency:{l:'Digital agency',bg:'rgba(107,114,128,0.08)',bd:'rgba(107,114,128,0.3)',t:'#374151'},saas:{l:'SaaS & Product',bg:'rgba(59,130,246,0.08)',bd:'rgba(59,130,246,0.3)',t:'#1d4ed8'},corporate:{l:'Corporate',bg:'rgba(139,92,246,0.08)',bd:'rgba(139,92,246,0.3)',t:'#6d28d9'},nuts:{l:'Nuts & Energie',bg:'rgba(16,185,129,0.08)',bd:'rgba(16,185,129,0.3)',t:'#065f46'},gov:{l:'Overheid',bg:'rgba(245,158,11,0.1)',bd:'rgba(245,158,11,0.35)',t:'#92400e'},hightech:{l:'High-end / Tech',bg:'rgba(236,72,153,0.08)',bd:'rgba(236,72,153,0.3)',t:'#9d174d'},other:{l:'Overige',bg:'rgba(239,68,68,0.07)',bd:'rgba(239,68,68,0.25)',t:'#991b1b'}};
 const RM={uxui:{l:'UX/UI Design',bg:'rgba(236,72,153,0.08)',bd:'rgba(236,72,153,0.3)',t:'#9d174d'},product:{l:'Product Design',bg:'rgba(59,130,246,0.08)',bd:'rgba(59,130,246,0.3)',t:'#1d4ed8'},ux:{l:'UX Design',bg:'rgba(16,185,129,0.08)',bd:'rgba(16,185,129,0.3)',t:'#065f46'},ui:{l:'UI Design',bg:'rgba(139,92,246,0.08)',bd:'rgba(139,92,246,0.3)',t:'#6d28d9'},researcher:{l:'UX Research',bg:'rgba(245,158,11,0.1)',bd:'rgba(245,158,11,0.35)',t:'#92400e'},service:{l:'Service Design',bg:'rgba(107,114,128,0.08)',bd:'rgba(107,114,128,0.3)',t:'#374151'},other:{l:'Overig',bg:'rgba(239,68,68,0.07)',bd:'rgba(239,68,68,0.25)',t:'#991b1b'}};
 const LM={junior:{l:'Junior',bg:'rgba(16,185,129,0.08)',bd:'rgba(16,185,129,0.3)',t:'#065f46'},medior:{l:'Medior',bg:'rgba(59,130,246,0.08)',bd:'rgba(59,130,246,0.3)',t:'#1d4ed8'},senior:{l:'Senior',bg:'rgba(245,158,11,0.1)',bd:'rgba(245,158,11,0.35)',t:'#92400e'},lead:{l:'Lead',bg:'rgba(236,72,153,0.08)',bd:'rgba(236,72,153,0.3)',t:'#9d174d'},head:{l:'Head',bg:'rgba(139,92,246,0.08)',bd:'rgba(139,92,246,0.3)',t:'#6d28d9'}};
+
 const LEVELS=[['all','Alle'],['junior','Junior'],['medior','Medior'],['senior','Senior'],['lead','Lead'],['head','Head']];
 const ROLES=[['all','Alle rollen'],['uxui','UX/UI Design'],['product','Product Design'],['ux','UX Design'],['ui','UI Design'],['researcher','UX Research'],['service','Service Design'],['other','Overig']];
 const CATS=[['all','Alle'],['agency','Digital agency'],['saas','SaaS & Product'],['corporate','Corporate'],['nuts','Nuts & Energie'],['gov','Overheid'],['hightech','High-end / Tech'],['other','Overige']];
-const BASE=[{"name": "Koos Service Design", "title": "Product/Service Designer", "min": 3107, "max": 3792, "level": "junior", "cat": "agency", "role": "product"}, {"name": "Lely", "title": "UX Designer", "min": 4100, "max": 4100, "level": "junior", "cat": "saas", "role": "ux"}, {"name": "Capgemini", "title": "UX Designer", "min": 3720, "max": 3720, "level": "junior", "cat": "agency", "role": "ux"}, {"name": "IVO Rechtspraak", "title": "Trainee UX/UI Designer", "min": 4868, "max": 4868, "level": "junior", "cat": "gov", "role": "uxui"}, {"name": "VECOZO", "title": "Trainee UX/UI Designer", "min": 3535, "max": 3535, "level": "junior", "cat": "saas", "role": "uxui"}, {"name": "ING", "title": "UX Designer", "min": 3173, "max": 5251, "level": "junior", "cat": "corporate", "role": "ux"}, {"name": "Voormedia", "title": "UX Designer", "min": 2850, "max": 3250, "level": "junior", "cat": "agency", "role": "ux"}, {"name": "Vivid Green", "title": "UX Designer", "min": 2500, "max": 2900, "level": "junior", "cat": "agency", "role": "ux"}, {"name": "Chocolate", "title": "UX Designer", "min": 2750, "max": 3750, "level": "junior", "cat": "other", "role": "ux"}, {"name": "Donderz", "title": "UX Designer", "min": 2500, "max": 4000, "level": "junior", "cat": "agency", "role": "ux"}, {"name": "Eurol", "title": "UX Designer", "min": 2500, "max": 3000, "level": "junior", "cat": "other", "role": "ux"}, {"name": "Jumbo", "title": "UX Designer", "min": 3900, "max": 5100, "level": "junior", "cat": "corporate", "role": "ux"}, {"name": "Antum", "title": "UX/UI Designer", "min": 3200, "max": 3800, "level": "junior", "cat": "agency", "role": "uxui"}, {"name": "NS", "title": "UX Designer", "min": 5562, "max": 5562, "level": "junior", "cat": "corporate", "role": "ux"}, {"name": "Nationale Nederlanden", "title": "UX Designer", "min": 3517, "max": 5025, "level": "junior", "cat": "corporate", "role": "ux"}, {"name": "Jungle Minds", "title": "UX Designer", "min": 2500, "max": 3000, "level": "junior", "cat": "agency", "role": "ux"}, {"name": "IND", "title": "Conversation Designer Chatbot", "min": 3404, "max": 5389, "level": "junior", "cat": "gov", "role": "other"}, {"name": "Antum", "title": "UX/UI Designer", "min": 3200, "max": 3800, "level": "junior", "cat": "agency", "role": "uxui"}, {"name": "WebNL", "title": "UX/UI Designer", "min": 3427, "max": 4890, "level": "medior", "cat": "saas", "role": "uxui"}, {"name": "NGAGE IT", "title": "Product Designer Fintech", "min": 4500, "max": 6500, "level": "medior", "cat": "saas", "role": "product"}, {"name": "MB Effect", "title": "Web Designer / UX Designer", "min": 2700, "max": 5500, "level": "medior", "cat": "saas", "role": "ux"}, {"name": "Lefebvre Sdu", "title": "UX Designer", "min": 4470, "max": 5790, "level": "medior", "cat": "saas", "role": "ux"}, {"name": "TJIP", "title": "UX/UI Designer Financial Services", "min": 3000, "max": 3700, "level": "medior", "cat": "other", "role": "uxui"}, {"name": "Veldsink Groep", "title": "User Experience Designer", "min": 4000, "max": 5720, "level": "medior", "cat": "saas", "role": "ux"}, {"name": "Topicus", "title": "UX Designer", "min": 3565, "max": 3565, "level": "medior", "cat": "saas", "role": "ux"}, {"name": "Paragin Group", "title": "UI Designer", "min": 3750, "max": 4600, "level": "medior", "cat": "saas", "role": "ui"}, {"name": "MatchMatters", "title": "UX Designer", "min": 4000, "max": 5500, "level": "medior", "cat": "saas", "role": "ux"}, {"name": "12Build", "title": "Product Designer", "min": 4700, "max": 5500, "level": "medior", "cat": "saas", "role": "product"}, {"name": "Plug&Play", "title": "UX/UI Designer", "min": 4000, "max": 5500, "level": "medior", "cat": "saas", "role": "uxui"}, {"name": "Froge", "title": "UX/UI Designer", "min": 3500, "max": 4500, "level": "medior", "cat": "agency", "role": "uxui"}, {"name": "Publitas.com", "title": "Product Designer", "min": 4166, "max": 5833, "level": "medior", "cat": "saas", "role": "product"}, {"name": "Belastingdienst", "title": "UX/UI Designer", "min": 4024, "max": 6110, "level": "medior", "cat": "gov", "role": "uxui"}, {"name": "JUSTIN Recruitment", "title": "User Experience Specialist", "min": 3900, "max": 5800, "level": "medior", "cat": "saas", "role": "ux"}, {"name": "Ministerie van Defensie", "title": "UX/UI Designer", "min": 4772, "max": 6549, "level": "medior", "cat": "gov", "role": "uxui"}, {"name": "Mealtime", "title": "UX/UI Designer", "min": 4583, "max": 6667, "level": "medior", "cat": "saas", "role": "uxui"}, {"name": "H2L Robotics", "title": "UX/UI Designer", "min": 3500, "max": 5000, "level": "medior", "cat": "saas", "role": "uxui"}, {"name": "OMRT", "title": "UX/UI Designer", "min": 3333, "max": 4166, "level": "medior", "cat": "saas", "role": "uxui"}, {"name": "Lely", "title": "UX Designer Robotics", "min": 4800, "max": 4800, "level": "medior", "cat": "saas", "role": "ux"}, {"name": "Enexis", "title": "User Experience Designer", "min": 5000, "max": 5000, "level": "medior", "cat": "nuts", "role": "ux"}, {"name": "TommyTomato", "title": "UX / Product Designer", "min": 4000, "max": 4800, "level": "medior", "cat": "saas", "role": "product"}, {"name": "2DIGITS", "title": "UX/UI Designer", "min": 2800, "max": 3600, "level": "medior", "cat": "agency", "role": "uxui"}, {"name": "Medicore", "title": "UX Designer", "min": 4250, "max": 6250, "level": "medior", "cat": "saas", "role": "ux"}, {"name": "Promptwatch", "title": "Product Designer", "min": 4583, "max": 7083, "level": "medior", "cat": "saas", "role": "product"}, {"name": "Rabobank", "title": "UX Designer", "min": 3869, "max": 5526, "level": "medior", "cat": "corporate", "role": "ux"}, {"name": "Univé", "title": "User Experience Designer", "min": 5402, "max": 7762, "level": "medior", "cat": "other", "role": "ux"}, {"name": "Openred", "title": "UX Designer", "min": 3000, "max": 5000, "level": "medior", "cat": "saas", "role": "ux"}, {"name": "Koos Service Design", "title": "Medior Product Designer", "min": 3758, "max": 4832, "level": "medior", "cat": "agency", "role": "product"}, {"name": "EDSN", "title": "UX Designer", "min": 4583, "max": 6000, "level": "medior", "cat": "nuts", "role": "ux"}, {"name": "Plug&Play", "title": "UX/UI Designer", "min": 4000, "max": 5500, "level": "medior", "cat": "saas", "role": "uxui"}, {"name": "Visma Idella", "title": "UX Designer", "min": 4700, "max": 5800, "level": "medior", "cat": "other", "role": "ux"}, {"name": "Nationaal Cyber Security Centrum", "title": "UX Designer", "min": 3404, "max": 3404, "level": "medior", "cat": "gov", "role": "ux"}, {"name": "Proud Nerds", "title": "UX Designer", "min": 3500, "max": 4500, "level": "medior", "cat": "agency", "role": "ux"}, {"name": "Campercontact", "title": "UX/UI Designer", "min": 3000, "max": 4800, "level": "medior", "cat": "saas", "role": "uxui"}, {"name": "CIMSOLUTIONS", "title": "UX Designer", "min": 6000, "max": 6000, "level": "medior", "cat": "agency", "role": "ux"}, {"name": "Chargee Energy", "title": "UX Designer", "min": 4000, "max": 5000, "level": "medior", "cat": "saas", "role": "ux"}, {"name": "Forge", "title": "UX/UI Designer", "min": 4500, "max": 5000, "level": "medior", "cat": "agency", "role": "uxui"}, {"name": "PostNL", "title": "UX Designer", "min": 4589, "max": 6499, "level": "medior", "cat": "corporate", "role": "ux"}, {"name": "CJIB", "title": "Service Designer", "min": 4691, "max": 6907, "level": "medior", "cat": "gov", "role": "service"}, {"name": "Purple Media", "title": "UX Designer", "min": 3600, "max": 4400, "level": "medior", "cat": "agency", "role": "ux"}, {"name": "ANWB", "title": "UX Designer", "min": 3617, "max": 5805, "level": "medior", "cat": "corporate", "role": "ux"}, {"name": "ZorgDomein", "title": "UX Designer", "min": 3400, "max": 4000, "level": "medior", "cat": "other", "role": "ux"}, {"name": "TimeChimp", "title": "Product Designer", "min": 4343, "max": 5876, "level": "medior", "cat": "saas", "role": "product"}, {"name": "51North", "title": "UX Designer", "min": 3600, "max": 3600, "level": "medior", "cat": "saas", "role": "ux"}, {"name": "ABN AMRO", "title": "UX Designer", "min": 4086, "max": 5800, "level": "medior", "cat": "corporate", "role": "ux"}, {"name": "Hostnet", "title": "Product Designer Digital Commerce", "min": 3200, "max": 3600, "level": "medior", "cat": "saas", "role": "product"}, {"name": "Futurewhiz", "title": "UX Designer", "min": 4000, "max": 5500, "level": "medior", "cat": "saas", "role": "ux"}, {"name": "TaxModel", "title": "UX / Product Designer", "min": 3050, "max": 4490, "level": "medior", "cat": "saas", "role": "product"}, {"name": "KLM", "title": "Product Designer", "min": 4295, "max": 6136, "level": "medior", "cat": "corporate", "role": "product"}, {"name": "RVO", "title": "UX/UI Designer", "min": 4024, "max": 6110, "level": "medior", "cat": "gov", "role": "uxui"}, {"name": "Gazelle", "title": "UX Designer", "min": 4300, "max": 5500, "level": "medior", "cat": "saas", "role": "ux"}, {"name": "Sociale Verzekeringsbank", "title": "UX Designer", "min": 4834, "max": 6395, "level": "medior", "cat": "gov", "role": "ux"}, {"name": "Efteling", "title": "UX Designer", "min": 3397, "max": 4998, "level": "medior", "cat": "corporate", "role": "ux"}, {"name": "Alliander", "title": "UX Designer", "min": 4580, "max": 6543, "level": "medior", "cat": "nuts", "role": "ux"}, {"name": "Coöperatie VGZ", "title": "Digital UX Expert", "min": 4968, "max": 7095, "level": "medior", "cat": "corporate", "role": "ux"}, {"name": "Nmbrs", "title": "Product Designer", "min": 3800, "max": 5000, "level": "medior", "cat": "saas", "role": "product"}, {"name": "Garansys", "title": "UX/UI Designer", "min": 3600, "max": 4500, "level": "medior", "cat": "saas", "role": "uxui"}, {"name": "Landal", "title": "Product Designer", "min": 3630, "max": 5185, "level": "medior", "cat": "saas", "role": "product"}, {"name": "Stedin", "title": "UX Designer", "min": 6085, "max": 7059, "level": "medior", "cat": "nuts", "role": "ux"}, {"name": "Gaia Ecologie", "title": "UX/UI Designer", "min": 3000, "max": 4000, "level": "medior", "cat": "other", "role": "uxui"}, {"name": "Bakker & Spees", "title": "UX/UI Designer", "min": 3200, "max": 5000, "level": "medior", "cat": "agency", "role": "uxui"}, {"name": "Striive", "title": "Product Designer", "min": 4250, "max": 7000, "level": "medior", "cat": "saas", "role": "product"}, {"name": "UWV", "title": "UX Designer", "min": 6583, "max": 6583, "level": "medior", "cat": "gov", "role": "ux"}, {"name": "Hostinger", "title": "Product Designer", "min": 4470, "max": 6500, "level": "medior", "cat": "saas", "role": "product"}, {"name": "Studio Doppelgänger", "title": "UX/UI Designer", "min": 4580, "max": 4580, "level": "medior", "cat": "agency", "role": "uxui"}, {"name": "Unilever", "title": "UX Designer", "min": 5400, "max": 7416, "level": "senior", "cat": "corporate", "role": "ux"}, {"name": "Nationale-Nederlanden", "title": "UX Researcher", "min": 5095, "max": 7278, "level": "senior", "cat": "corporate", "role": "researcher"}, {"name": "Europol", "title": "Design Thinking Agent", "min": 4449, "max": 6444, "level": "senior", "cat": "gov", "role": "other"}, {"name": "Gemeente Amsterdam", "title": "Visual Designer", "min": 4465, "max": 6343, "level": "senior", "cat": "gov", "role": "other"}, {"name": "Rabobank", "title": "Designer Housing", "min": 5876, "max": 8395, "level": "senior", "cat": "corporate", "role": "uxui"}, {"name": "Eneco", "title": "Product Designer Customer Exp.", "min": 6666, "max": 7916, "level": "senior", "cat": "nuts", "role": "product"}, {"name": "Simacan", "title": "UX Designer", "min": 3725, "max": 6085, "level": "senior", "cat": "saas", "role": "ux"}, {"name": "Jumbo", "title": "Service Designer", "min": 5200, "max": 6700, "level": "senior", "cat": "corporate", "role": "service"}, {"name": "ABN AMRO", "title": "Service Design Researcher", "min": 5112, "max": 7303, "level": "senior", "cat": "corporate", "role": "researcher"}, {"name": "Politie", "title": "Senior Service Designer", "min": 4423, "max": 6490, "level": "senior", "cat": "gov", "role": "service"}, {"name": "Keylane", "title": "UX Researcher", "min": 6000, "max": 7000, "level": "senior", "cat": "saas", "role": "researcher"}, {"name": "Keylane", "title": "UX Designer", "min": 6000, "max": 7000, "level": "senior", "cat": "saas", "role": "ux"}, {"name": "Postcode Loterij", "title": "Product Designer", "min": 4900, "max": 6000, "level": "senior", "cat": "corporate", "role": "product"}, {"name": "Smartner", "title": "UX Specialist", "min": 3500, "max": 4250, "level": "senior", "cat": "agency", "role": "ux"}, {"name": "Infomedics", "title": "UX Designer", "min": 6000, "max": 6500, "level": "senior", "cat": "corporate", "role": "ux"}, {"name": "Norday", "title": "Digital Designer", "min": 3500, "max": 4700, "level": "senior", "cat": "agency", "role": "other"}, {"name": "Kaliber", "title": "Product Designer", "min": 4500, "max": 5500, "level": "senior", "cat": "agency", "role": "product"}, {"name": "NHG", "title": "UX Researcher", "min": 5512, "max": 7085, "level": "senior", "cat": "other", "role": "researcher"}, {"name": "Remote", "title": "Product Designer", "min": 4779, "max": 10754, "level": "senior", "cat": "hightech", "role": "product"}, {"name": "Essense", "title": "UX/UI Designer", "min": 4000, "max": 5200, "level": "senior", "cat": "saas", "role": "uxui"}, {"name": "DotControl", "title": "Digital Designer", "min": 4500, "max": 5700, "level": "senior", "cat": "agency", "role": "other"}, {"name": "Saxum", "title": "Product Designer", "min": 3800, "max": 5500, "level": "senior", "cat": "agency", "role": "product"}, {"name": "Achmea", "title": "Creative Concept Designer", "min": 4149, "max": 5697, "level": "senior", "cat": "corporate", "role": "other"}, {"name": "Booking.com", "title": "Service Designer", "min": 4166, "max": 9166, "level": "senior", "cat": "hightech", "role": "service"}, {"name": "EDSN", "title": "UX/UI Designer", "min": 5000, "max": 6000, "level": "senior", "cat": "nuts", "role": "uxui"}, {"name": "Ministerie van BZK", "title": "Senior Service Designer", "min": 5212, "max": 7747, "level": "senior", "cat": "gov", "role": "service"}, {"name": "Gemeente Rotterdam", "title": "Design System Designer", "min": 4465, "max": 6343, "level": "senior", "cat": "gov", "role": "other"}, {"name": "Photoroom", "title": "Product Designer", "min": 5416, "max": 7083, "level": "senior", "cat": "saas", "role": "product"}, {"name": "Brainial", "title": "UX Designer", "min": 7500, "max": 7500, "level": "senior", "cat": "saas", "role": "ux"}, {"name": "CGI", "title": "UX Designer Public Safety", "min": 4300, "max": 6700, "level": "senior", "cat": "agency", "role": "ux"}, {"name": "Nedap", "title": "UX Designer Business Automation", "min": 4000, "max": 5800, "level": "senior", "cat": "saas", "role": "ux"}, {"name": "NOWATCH", "title": "Digital Designer", "min": 4166, "max": 5000, "level": "senior", "cat": "corporate", "role": "other"}, {"name": "Equalture", "title": "UX Designer", "min": 4000, "max": 5500, "level": "senior", "cat": "corporate", "role": "ux"}, {"name": "Progresity", "title": "UX Researcher / Product Designer", "min": 4075, "max": 5575, "level": "senior", "cat": "saas", "role": "researcher"}, {"name": "Mediahuis", "title": "Product Designer", "min": 3562, "max": 5845, "level": "senior", "cat": "corporate", "role": "product"}, {"name": "Albert Heijn", "title": "Design System Designer", "min": 4583, "max": 6583, "level": "senior", "cat": "corporate", "role": "other"}, {"name": "Nedap", "title": "UX Designer Logistics", "min": 4200, "max": 5800, "level": "senior", "cat": "saas", "role": "ux"}, {"name": "Reducate", "title": "Product Designer", "min": 7083, "max": 7083, "level": "senior", "cat": "saas", "role": "product"}, {"name": "SuperYacht Times", "title": "Product Designer", "min": 3000, "max": 4000, "level": "senior", "cat": "other", "role": "product"}, {"name": "Koninklijke Marechaussee", "title": "UX Designer", "min": 7100, "max": 7100, "level": "senior", "cat": "gov", "role": "ux"}, {"name": "Comper", "title": "Product Designer", "min": 6667, "max": 8333, "level": "senior", "cat": "saas", "role": "product"}, {"name": "BeterBed", "title": "UX/UI Designer", "min": 4000, "max": 4750, "level": "senior", "cat": "corporate", "role": "uxui"}, {"name": "Maqqie", "title": "UX Designer", "min": 3700, "max": 5500, "level": "senior", "cat": "corporate", "role": "ux"}, {"name": "RVO", "title": "Service Designer", "min": 3400, "max": 5389, "level": "senior", "cat": "gov", "role": "service"}, {"name": "Rabobank", "title": "UX Designer Employee Experience", "min": 4516, "max": 6449, "level": "senior", "cat": "corporate", "role": "ux"}, {"name": "ABN AMRO", "title": "UX Designer My Environment", "min": 4092, "max": 5846, "level": "senior", "cat": "corporate", "role": "ux"}, {"name": "Eneco", "title": "Product Designer Customer Exp.", "min": 6666, "max": 7919, "level": "senior", "cat": "nuts", "role": "product"}, {"name": "Client Server", "title": "Head of Product Design b2c", "min": 10833, "max": 10833, "level": "head", "cat": "hightech", "role": "product"}, {"name": "BUUT", "title": "Head of Product Design", "min": 5847, "max": 8353, "level": "head", "cat": "corporate", "role": "product"}, {"name": "INSO", "title": "Lead UX/UI Designer", "min": 5200, "max": 5200, "level": "lead", "cat": "agency", "role": "product"}, {"name": "Consumentenbond", "title": "Lead Front-end & UX/UI", "min": 4056, "max": 6350, "level": "lead", "cat": "corporate", "role": "uxui"}, {"name": "Learneo", "title": "Staff Product Designer Growth", "min": 7833, "max": 15056, "level": "head", "cat": "hightech", "role": "product"}, {"name": "OSAGE", "title": "Team Lead & Senior Creative", "min": 4500, "max": 5500, "level": "lead", "cat": "agency", "role": "other"}, {"name": "Unilever", "title": "Experience Design Lead", "min": 5400, "max": 7416, "level": "lead", "cat": "corporate", "role": "ux"}, {"name": "Linku", "title": "Lead UX Researcher", "min": 4800, "max": 5500, "level": "lead", "cat": "saas", "role": "researcher"}, {"name": "DUO", "title": "Operational Manager UX Team", "min": 4691, "max": 6907, "level": "lead", "cat": "gov", "role": "ux"}, {"name": "ON THAT ASS", "title": "Head of Creative", "min": 4500, "max": 6800, "level": "head", "cat": "corporate", "role": "other"}, {"name": "OSAGE", "title": "Team Lead UX Design", "min": 4500, "max": 5500, "level": "lead", "cat": "agency", "role": "ux"}, {"name": "Postcode Loterij", "title": "Product Design Manager", "min": 6200, "max": 8200, "level": "lead", "cat": "corporate", "role": "product"}, {"name": "Blockrise", "title": "Lead Designer", "min": 4000, "max": 5000, "level": "lead", "cat": "other", "role": "uxui"}, {"name": "Rabobank", "title": "Lead Designer Housing", "min": 5876, "max": 8395, "level": "lead", "cat": "corporate", "role": "ux"}, {"name": "Postcode Loterij", "title": "Research & Service Design Lead", "min": 6200, "max": 8200, "level": "lead", "cat": "corporate", "role": "researcher"}, {"name": "Mediq", "title": "Product Design Lead", "min": 6000, "max": 7200, "level": "lead", "cat": "saas", "role": "product"}, {"name": "KPN", "title": "Lead Journey Chain Management CX", "min": 5742, "max": 8865, "level": "lead", "cat": "corporate", "role": "other"}, {"name": "Remote", "title": "Staff Product Designer Pay Ecosys.", "min": 5708, "max": 12841, "level": "head", "cat": "hightech", "role": "product"}, {"name": "Politie", "title": "Lead UX Designer AI", "min": 4335, "max": 6362, "level": "lead", "cat": "gov", "role": "ux"}, {"name": "QuillBot", "title": "Staff Product Designer Growth", "min": 7833, "max": 10583, "level": "head", "cat": "hightech", "role": "product"}, {"name": "Natuurhuisje", "title": "Design Lead", "min": 4500, "max": 6200, "level": "lead", "cat": "saas", "role": "other"}, {"name": "ING", "title": "Chapter Lead UX Design", "min": 6500, "max": 10389, "level": "lead", "cat": "corporate", "role": "ux"}, {"name": "Rabobank", "title": "Lead Designer Engineering Exp.", "min": 5381, "max": 7687, "level": "lead", "cat": "corporate", "role": "ux"}, {"name": "Digital Agency", "title": "Lead Experience Designer", "min": 6000, "max": 6500, "level": "lead", "cat": "agency", "role": "ux"}, {"name": "PLUS Retail", "title": "Team Manager Brand & Visual Design", "min": 5608, "max": 8000, "level": "lead", "cat": "corporate", "role": "other"}, {"name": "Happy Horizon", "title": "Teamlead UX Design", "min": 4500, "max": 5500, "level": "lead", "cat": "agency", "role": "ux"}, {"name": "ABN AMRO", "title": "Service Design Lead", "min": 6793, "max": 9704, "level": "lead", "cat": "corporate", "role": "service"}, {"name": "ABN AMRO", "title": "UX Design Lead", "min": 5847, "max": 8353, "level": "lead", "cat": "corporate", "role": "ux"}, {"name": "Depot", "title": "Principal Product Designer", "min": 16667, "max": 20833, "level": "head", "cat": "hightech", "role": "product"}, {"name": "All Funeral Services", "title": "Product Design Lead", "min": 5700, "max": 10800, "level": "lead", "cat": "saas", "role": "product"}, {"name": "Intaker", "title": "Head of Product Design", "min": 8333, "max": 12500, "level": "head", "cat": "saas", "role": "product"}, {"name": "Picqer", "title": "Lead Product Designer", "min": 6500, "max": 8370, "level": "lead", "cat": "saas", "role": "product"}, {"name": "KPN", "title": "Lead Digital Experience", "min": 5742, "max": 8865, "level": "lead", "cat": "corporate", "role": "ux"}, {"name": "Virtual Vaults", "title": "UX Lead", "min": 4500, "max": 5800, "level": "lead", "cat": "saas", "role": "ux"}, {"name": "Jumbo", "title": "Design Lead", "min": 5700, "max": 7300, "level": "lead", "cat": "corporate", "role": "other"}, {"name": "Mobiel.nl", "title": "UX Lead", "min": 6000, "max": 7000, "level": "lead", "cat": "saas", "role": "ux"}, {"name": "Proud Nerds", "title": "UX Lead & Designer", "min": 3750, "max": 5500, "level": "lead", "cat": "agency", "role": "ux"}, {"name": "TOPdesk", "title": "Head of EX", "min": 7500, "max": 9500, "level": "head", "cat": "saas", "role": "ux"}, {"name": "Mosadex", "title": "UX Lead", "min": 3875, "max": 6200, "level": "lead", "cat": "saas", "role": "ux"}, {"name": "PGGM", "title": "Channel Manager Website", "min": 5337, "max": 7624, "level": "lead", "cat": "corporate", "role": "other"}, {"name": "SkillLab", "title": "UX Lead", "min": 7083, "max": 8333, "level": "lead", "cat": "saas", "role": "ux"}, {"name": "MyWheels", "title": "Lead UX/UI Designer", "min": 5000, "max": 6000, "level": "lead", "cat": "saas", "role": "uxui"}, {"name": "On Air", "title": "Lead Product Designer", "min": 5000, "max": 6666, "level": "lead", "cat": "saas", "role": "product"}, {"name": "Gameplay Galaxy", "title": "Lead UX/UI Designer", "min": 8628, "max": 9245, "level": "lead", "cat": "saas", "role": "uxui"}, {"name": "AS Watson", "title": "UX Design Lead", "min": 5500, "max": 8180, "level": "lead", "cat": "corporate", "role": "ux"}, {"name": "Gitlab", "title": "Product Design Manager", "min": 12500, "max": 16666, "level": "lead", "cat": "hightech", "role": "product"}];
-const SK='ux_salary_v29';
-let custom=[],all=[...BASE],aL='all',aC='all',aR='all';
-function save(){try{localStorage.setItem(SK,JSON.stringify(custom));}catch(e){}}
-function load(){try{const r=localStorage.getItem(SK);if(r){custom=JSON.parse(r);all=[...BASE,...custom];}}catch(e){}}
+
+let BASE=[], aL='all', aC='all', aR='all';
+
+// ── Supabase fetch ───────────────────────────────────────────
+async function loadData() {
+  try {
+    const res = await fetch(`${SUPA_URL}/rest/v1/vacatures?select=*&limit=1000`, {
+      headers: {
+        'apikey': SUPA_KEY,
+        'Authorization': `Bearer ${SUPA_KEY}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    BASE = await res.json();
+    document.getElementById('countLabel').textContent = BASE.length + ' vacatures';
+    buildFilters();
+    render();
+  } catch(e) {
+    const bar = document.getElementById('errorBar');
+    bar.style.display = 'block';
+    bar.textContent = 'Kon data niet laden: ' + e.message;
+    document.getElementById('jobList').innerHTML = '<div class="empty">Data kon niet worden geladen.</div>';
+  }
+}
+
+async function addEntry() {
+  const name = document.getElementById('f-name').value.trim();
+  const title = document.getElementById('f-title').value.trim();
+  const min = parseInt(document.getElementById('f-min').value);
+  const max = parseInt(document.getElementById('f-max').value);
+  if (!name) { toast('Vul een bedrijfsnaam in'); return; }
+  if (isNaN(min)||min<=0) { toast('Vul een geldig min. salaris in'); return; }
+  if (isNaN(max)||max<min) { toast('Max. moet hoger zijn dan min.'); return; }
+
+  const entry = {
+    name, title, min, max,
+    level: document.getElementById('f-level').value,
+    cat: document.getElementById('f-cat').value,
+    role: document.getElementById('f-role').value,
+  };
+
+  try {
+    const res = await fetch(`${SUPA_URL}/rest/v1/vacatures`, {
+      method: 'POST',
+      headers: {
+        'apikey': SUPA_KEY,
+        'Authorization': `Bearer ${SUPA_KEY}`,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=representation'
+      },
+      body: JSON.stringify(entry)
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    ['f-name','f-title','f-min','f-max'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('addForm').style.display = 'none';
+    await loadData();
+    toast('Vacature toegevoegd ✓');
+  } catch(e) {
+    toast('Fout bij toevoegen: ' + e.message);
+  }
+}
+
+async function deleteEntry(id) {
+  try {
+    const res = await fetch(`${SUPA_URL}/rest/v1/vacatures?id=eq.${id}`, {
+      method: 'DELETE',
+      headers: {
+        'apikey': SUPA_KEY,
+        'Authorization': `Bearer ${SUPA_KEY}`,
+      }
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    await loadData();
+    toast('Verwijderd');
+  } catch(e) {
+    toast('Fout bij verwijderen: ' + e.message);
+  }
+}
+
+// ── UI helpers ───────────────────────────────────────────────
 function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200);}
 const gM=d=>(d.min+d.max)/2;
-const fmt=v=>'\u20ac'+Math.round(v).toLocaleString('nl-NL');
+const fmt=v=>'€'+Math.round(v).toLocaleString('nl-NL');
+
 function mkBtn(label,onclick,isOn){const b=document.createElement('button');b.textContent=label;b.setAttribute('style',isOn?S_ON:S_OFF);b.onclick=onclick;return b;}
+
 function buildFilters(){
   const lb=document.getElementById('level-btns'),rb=document.getElementById('role-btns'),cb=document.getElementById('cat-btns');
   lb.innerHTML='';rb.innerHTML='';cb.innerHTML='';
@@ -179,22 +267,10 @@ function buildFilters(){
   ROLES.forEach(([v,l])=>rb.appendChild(mkBtn(l,function(){aR=v;buildFilters();render();},aR===v)));
   CATS.forEach(([v,l])=>cb.appendChild(mkBtn(l,function(){aC=v;buildFilters();render();},aC===v)));
 }
+
 function resetFilters(){aL='all';aC='all';aR='all';document.getElementById('search').value='';buildFilters();render();}
 function toggleForm(){const f=document.getElementById('addForm');const op=f.style.display==='block';f.style.display=op?'none':'block';if(!op)document.getElementById('f-name').focus();}
-function addEntry(){
-  const name=document.getElementById('f-name').value.trim(),title=document.getElementById('f-title').value.trim();
-  const min=parseInt(document.getElementById('f-min').value),max=parseInt(document.getElementById('f-max').value);
-  if(!name){toast('Vul een bedrijfsnaam in');return;}
-  if(isNaN(min)||min<=0){toast('Vul een geldig min. salaris in');return;}
-  if(isNaN(max)||max<=0){toast('Vul een geldig max. salaris in');return;}
-  if(max<min){toast('Max. moet hoger zijn dan min.');return;}
-  const e={id:Date.now(),name,title,min,max,level:document.getElementById('f-level').value,cat:document.getElementById('f-cat').value,role:document.getElementById('f-role').value,custom:true};
-  custom.push(e);all=[...BASE,...custom];
-  ['f-name','f-title','f-min','f-max'].forEach(id=>document.getElementById(id).value='');
-  document.getElementById('addForm').style.display='none';
-  save();render();toast('Vacature toegevoegd \u2713');
-}
-function deleteEntry(id){custom=custom.filter(e=>e.id!==id);all=[...BASE,...custom];save();render();toast('Verwijderd');}
+
 function calcStats(arr){
   if(!arr.length)return null;
   const mids=arr.map(gM).sort((a,b)=>a-b);
@@ -202,11 +278,12 @@ function calcStats(arr){
   const median=mids.length%2===0?(mids[mids.length/2-1]+mids[mids.length/2])/2:mids[Math.floor(mids.length/2)];
   const freq={};arr.forEach(d=>{const b=Math.round(gM(d)/500)*500;freq[b]=(freq[b]||0)+1;});
   const mode=parseInt(Object.entries(freq).sort((a,b)=>b[1]-a[1])[0][0]);
-  return{avg,median,mode,lo:Math.min(...arr.map(d=>d.min)),hi:Math.max(...arr.map(d=>d.max)),avgMin:arr.reduce((a,d)=>a+d.min,0)/arr.length,avgMax:arr.reduce((a,d)=>a+d.max,0)/arr.length};
+  return{avg,median,mode,hi:Math.max(...arr.map(d=>d.max)),avgMin:arr.reduce((a,d)=>a+d.min,0)/arr.length,avgMax:arr.reduce((a,d)=>a+d.max,0)/arr.length};
 }
+
 function getFiltered(){
   const q=document.getElementById('search').value.toLowerCase();
-  return all.filter(d=>{
+  return BASE.filter(d=>{
     if(aL!=='all'&&d.level!==aL)return false;
     if(aC!=='all'&&d.cat!==aC)return false;
     if(aR!=='all'&&d.role!==aR)return false;
@@ -214,30 +291,76 @@ function getFiltered(){
     return true;
   });
 }
+
 function render(){
-  const f=getFiltered(),s=calcStats(f);
+  const f=getFiltered(), s=calcStats(f);
   document.getElementById('countLabel').textContent=f.length+' vacatures';
-  if(!s){document.getElementById('stats').innerHTML='';document.getElementById('avgRangeBar').innerHTML='';document.getElementById('jobList').innerHTML='<div class="empty">Geen vacatures gevonden.</div>';return;}
-  document.getElementById('stats').innerHTML=`<div class="stat-card hl"><p class="stat-label">Gem. salarisrange</p><p class="stat-value">${fmt(s.avgMin)} &ndash; ${fmt(s.avgMax)}</p><p class="stat-sub">gemiddelde van alle min. en max. salarissen</p></div><div class="stat-card"><p class="stat-label">Mediaan</p><p class="stat-value">${fmt(s.median)}</p><p class="stat-sub">helft zit eronder, helft erboven</p></div><div class="stat-card"><p class="stat-label">Modaal</p><p class="stat-value">${fmt(s.mode)}</p><p class="stat-sub">meest voorkomend salaris</p></div>`;
+  if(!s){
+    document.getElementById('stats').innerHTML='';
+    document.getElementById('avgRangeBar').innerHTML='';
+    document.getElementById('jobList').innerHTML='<div class="empty">Geen vacatures gevonden.</div>';
+    return;
+  }
+  document.getElementById('stats').innerHTML=`
+    <div class="stat-card hl"><p class="stat-label">Gem. salarisrange</p><p class="stat-value">${fmt(s.avgMin)} &ndash; ${fmt(s.avgMax)}</p><p class="stat-sub">gemiddelde van alle min. en max. salarissen</p></div>
+    <div class="stat-card"><p class="stat-label">Mediaan</p><p class="stat-value">${fmt(s.median)}</p><p class="stat-sub">helft zit eronder, helft erboven</p></div>
+    <div class="stat-card"><p class="stat-label">Modaal</p><p class="stat-value">${fmt(s.mode)}</p><p class="stat-sub">meest voorkomend salaris</p></div>`;
   const sc=s.hi*1.05,lp=(s.avgMin/sc*100).toFixed(1),wp=((s.avgMax-s.avgMin)/sc*100).toFixed(1),mP=(s.avg/sc*100).toFixed(1),mdP=(s.median/sc*100).toFixed(1);
-  document.getElementById('avgRangeBar').innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;"><span style="font-size:10px;color:#9ca3af;text-transform:uppercase;letter-spacing:.08em;font-weight:600;">Gemiddelde salarisrange van selectie</span><span style="font-size:12px;color:#374151;font-weight:600;">${fmt(s.avgMin)} &ndash; ${fmt(s.avgMax)}</span></div><div style="position:relative;height:20px;margin-bottom:12px;"><div style="position:absolute;top:50%;transform:translateY(-50%);left:0;right:0;height:8px;background:#e5e7eb;border-radius:4px;"></div><div style="position:absolute;top:50%;transform:translateY(-50%);left:${lp}%;width:${wp}%;height:16px;background:rgba(245,158,11,0.15);border:2px dashed rgba(245,158,11,0.55);border-radius:5px;"></div><div style="position:absolute;top:0;bottom:0;width:2.5px;left:${mP}%;background:#f59e0b;border-radius:2px;"></div><div style="position:absolute;top:0;bottom:0;width:2.5px;left:${mdP}%;background:#ef4444;border-radius:2px;"></div></div><div style="display:flex;gap:16px;flex-wrap:wrap;font-size:11px;color:#9ca3af;"><span style="display:flex;align-items:center;gap:5px;"><span style="width:10px;height:10px;border-radius:2px;background:rgba(245,158,11,0.15);border:2px dashed rgba(245,158,11,0.55);display:inline-block;"></span>Gem. range</span><span style="display:flex;align-items:center;gap:5px;"><span style="width:2.5px;height:10px;background:#f59e0b;display:inline-block;border-radius:1px;"></span>Gem. midden: ${fmt(s.avg)}</span><span style="display:flex;align-items:center;gap:5px;"><span style="width:2.5px;height:10px;background:#ef4444;display:inline-block;border-radius:1px;"></span>Mediaan: ${fmt(s.median)}</span></div>`;
+  document.getElementById('avgRangeBar').innerHTML=`
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+      <span style="font-size:10px;color:#9ca3af;text-transform:uppercase;letter-spacing:.08em;font-weight:600;">Gemiddelde salarisrange van selectie</span>
+      <span style="font-size:12px;color:#374151;font-weight:600;">${fmt(s.avgMin)} &ndash; ${fmt(s.avgMax)}</span>
+    </div>
+    <div style="position:relative;height:20px;margin-bottom:12px;">
+      <div style="position:absolute;top:50%;transform:translateY(-50%);left:0;right:0;height:8px;background:#e5e7eb;border-radius:4px;"></div>
+      <div style="position:absolute;top:50%;transform:translateY(-50%);left:${lp}%;width:${wp}%;height:16px;background:rgba(245,158,11,0.15);border:2px dashed rgba(245,158,11,0.55);border-radius:5px;"></div>
+      <div style="position:absolute;top:0;bottom:0;width:2.5px;left:${mP}%;background:#f59e0b;border-radius:2px;"></div>
+      <div style="position:absolute;top:0;bottom:0;width:2.5px;left:${mdP}%;background:#ef4444;border-radius:2px;"></div>
+    </div>
+    <div style="display:flex;gap:16px;flex-wrap:wrap;font-size:11px;color:#9ca3af;">
+      <span style="display:flex;align-items:center;gap:5px;"><span style="width:10px;height:10px;border-radius:2px;background:rgba(245,158,11,0.15);border:2px dashed rgba(245,158,11,0.55);display:inline-block;"></span>Gem. range</span>
+      <span style="display:flex;align-items:center;gap:5px;"><span style="width:2.5px;height:10px;background:#f59e0b;display:inline-block;border-radius:1px;"></span>Gem. midden: ${fmt(s.avg)}</span>
+      <span style="display:flex;align-items:center;gap:5px;"><span style="width:2.5px;height:10px;background:#ef4444;display:inline-block;border-radius:1px;"></span>Mediaan: ${fmt(s.median)}</span>
+    </div>`;
   const aM=s.hi;
   document.getElementById('jobList').innerHTML=[...f].sort((a,b)=>gM(a)-gM(b)).map(d=>{
     const c=CM[d.cat]||CM.other,r=RM[d.role]||RM.other,lv=LM[d.level]||LM.medior;
     const lf=(d.min/aM*100).toFixed(2),wd=Math.max((d.max-d.min)/aM*100,0.5).toFixed(2);
     const med=(s.median/aM*100).toFixed(2),avgm=(s.avg/aM*100).toFixed(2);
     const aw=(s.avgMin/aM*100).toFixed(2),aww=Math.max((s.avgMax-s.avgMin)/aM*100,0.5).toFixed(2);
-    const nameS=d.name.length>22?d.name.slice(0,20)+'\u2026':d.name;
-    const titleS=d.title?(d.title.length>26?d.title.slice(0,24)+'\u2026':d.title):'';
-    const badge=d.custom?'<span style="font-size:10px;padding:1px 5px;border-radius:5px;background:#f0fdf4;color:#166534;border:1px solid #bbf7d0;margin-left:4px;font-weight:500;">eigen</span>':'';
-    const delBtn=d.custom?`<button onclick="deleteEntry(${d.id})" class="del-btn">&#10005;</button>`:'<span style="width:26px;display:inline-block;"></span>';
-    return`<div class="job-row"><div class="job-name-cell"><span class="job-name" title="${d.name}">${nameS}${badge}</span>${titleS?`<span class="job-title">${titleS}</span>`:''}</div><span class="chip-lvl" style="background:${lv.bg};border-color:${lv.bd};color:${lv.t};">${lv.l}</span><span class="chip-role" style="background:${r.bg};border-color:${r.bd};color:${r.t};">${r.l}</span><span class="chip-cat" style="background:${c.bg};border-color:${c.bd};color:${c.t};">${c.l}</span><div class="bar-cell"><div style="position:absolute;top:50%;transform:translateY(-50%);left:${aw}%;width:${aww}%;height:100%;background:rgba(245,158,11,0.12);border:1.5px dashed rgba(245,158,11,0.4);border-radius:5px;"></div><div class="bar-fill" data-left="${lf}" data-width="${wd}"></div><div class="bar-marker" style="left:${med}%;background:#ef4444;"></div><div class="bar-marker" style="left:${avgm}%;background:#f59e0b;"></div></div><span class="val-cell">${d.min===d.max?fmt(d.min):fmt(d.min)+' &ndash; '+fmt(d.max)}</span>${delBtn}</div>`;
+    const nameS=d.name.length>22?d.name.slice(0,20)+'…':d.name;
+    const titleS=d.title?(d.title.length>26?d.title.slice(0,24)+'…':d.title):'';
+    return`<div class="job-row">
+      <div class="job-name-cell">
+        <span class="job-name" title="${d.name}">${nameS}</span>
+        ${titleS?`<span class="job-title">${titleS}</span>`:''}
+      </div>
+      <span class="chip-lvl" style="background:${lv.bg};border-color:${lv.bd};color:${lv.t};">${lv.l}</span>
+      <span class="chip-role" style="background:${r.bg};border-color:${r.bd};color:${r.t};">${r.l}</span>
+      <span class="chip-cat" style="background:${c.bg};border-color:${c.bd};color:${c.t};">${c.l}</span>
+      <div class="bar-cell">
+        <div style="position:absolute;top:50%;transform:translateY(-50%);left:${aw}%;width:${aww}%;height:100%;background:rgba(245,158,11,0.12);border:1.5px dashed rgba(245,158,11,0.4);border-radius:5px;"></div>
+        <div class="bar-fill" data-left="${lf}" data-width="${wd}"></div>
+        <div class="bar-marker" style="left:${med}%;background:#ef4444;"></div>
+        <div class="bar-marker" style="left:${avgm}%;background:#f59e0b;"></div>
+      </div>
+      <span class="val-cell">${d.min===d.max?fmt(d.min):fmt(d.min)+' &ndash; '+fmt(d.max)}</span>
+      <button onclick="deleteEntry(${d.id})" class="del-btn" title="Verwijderen">&#10005;</button>
+    </div>`;
   }).join('');
-  requestAnimationFrame(()=>{document.querySelectorAll('.bar-fill').forEach((bar,i)=>{bar.style.left=bar.dataset.left+'%';bar.style.width='0%';setTimeout(()=>{bar.style.width=bar.dataset.width+'%';},i*14+40);});});
+  requestAnimationFrame(()=>{
+    document.querySelectorAll('.bar-fill').forEach((bar,i)=>{
+      bar.style.left=bar.dataset.left+'%';bar.style.width='0%';
+      setTimeout(()=>{bar.style.width=bar.dataset.width+'%';},i*14+40);
+    });
+  });
 }
-function toggleEx(h){const b=h.nextElementSibling;const c=h.querySelector('.echev');const o=b.classList.contains('open');b.classList.toggle('open',!o);c.classList.toggle('open',!o);}
-load();buildFilters();render();
 
+function toggleEx(h){const b=h.nextElementSibling;const c=h.querySelector('.echev');const o=b.classList.contains('open');b.classList.toggle('open',!o);c.classList.toggle('open',!o);}
+
+// Start
+buildFilters();
+loadData();
 </script>
 </body>
 </html>
